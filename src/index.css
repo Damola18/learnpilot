@@ -1,0 +1,181 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+@import url('https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* LearnPilot Design System - All colors must be HSL */
+
+@layer base {
+  :root {
+    /* Base Colors */
+    --background: 0 0% 100%;
+    --foreground: 222 22% 5%;
+
+    /* Card Components */
+    --card: 0 0% 100%;
+    --card-foreground: 222 22% 5%;
+
+    /* Popover Components */
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 22% 5%;
+
+    /* Learning-focused Primary (Orange) */
+    --primary: 47.9 95.8% 53.1%;
+    --primary-foreground: 0 0% 100%;
+    --primary-muted: 47.9 95.8% 95%;
+
+    /* Secondary Colors */
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 222 22% 5%;
+
+    /* Success Green */
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 100%;
+    --success-muted: 160 84% 95%;
+
+    /* Warning Orange */
+    --warning: 45 93% 47%;
+    --warning-foreground: 0 0% 100%;
+    --warning-muted: 45 93% 95%;
+
+    /* Destructive/Error Red */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Muted Colors */
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 8% 46%;
+
+    /* Accent Colors */
+    --accent: 220 14% 96%;
+    --accent-foreground: 222 22% 5%;
+
+    /* Form Elements */
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 47.9 95.8% 53.1%;
+
+    /* LearnPilot Brand Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(47.9 95.8% 53.1%), hsl(47.9 95.8% 63.1%));
+    --gradient-success: linear-gradient(135deg, hsl(160 84% 39%), hsl(160 84% 49%));
+    --gradient-hero: linear-gradient(135deg, hsl(47.9 95.8% 53.1%) 0%, hsl(160 84% 39%) 100%);
+
+    /* Shadows */
+    --shadow-learning: 0 4px 24px hsl(47.9 95.8% 53.1% / 0.1);
+    --shadow-success: 0 4px 24px hsl(160 84% 39% / 0.1);
+    --shadow-card: 0 2px 8px hsl(220 8% 46% / 0.08);
+
+    /* Radius */
+    --radius: 0.75rem;
+
+    /* Sidebar */
+    --sidebar-background: 47.9 95.8% 98%;
+    --sidebar-foreground: 222 22% 15%;
+    --sidebar-primary: 47.9 95.8% 53.1%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 47.9 95.8% 95%;
+    --sidebar-accent-foreground: 222 22% 15%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 47.9 95.8% 53.1%;
+
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .dark {
+    /* Base Colors */
+    --background: 222 22% 5%;
+    --foreground: 0 0% 98%;
+
+    /* Card Components */
+    --card: 222 22% 8%;
+    --card-foreground: 0 0% 98%;
+
+    /* Popover Components */
+    --popover: 222 22% 8%;
+    --popover-foreground: 0 0% 98%;
+
+    /* Primary Colors */
+    --primary: 47.9 95.8% 63.1%;
+    --primary-foreground: 222 22% 5%;
+    --primary-muted: 47.9 95.8% 15%;
+
+    /* Secondary Colors */
+    --secondary: 222 22% 12%;
+    --secondary-foreground: 0 0% 98%;
+
+    /* Success Green */
+    --success: 160 84% 55%;
+    --success-foreground: 222 22% 5%;
+    --success-muted: 160 84% 15%;
+
+    /* Warning Orange */
+    --warning: 45 93% 60%;
+    --warning-foreground: 222 22% 5%;
+    --warning-muted: 45 93% 15%;
+
+    /* Destructive/Error Red */
+    --destructive: 0 84% 65%;
+    --destructive-foreground: 0 0% 98%;
+
+    /* Muted Colors */
+    --muted: 222 22% 12%;
+    --muted-foreground: 220 8% 65%;
+
+    /* Accent Colors */
+    --accent: 222 22% 12%;
+    --accent-foreground: 0 0% 98%;
+
+    /* Form Elements */
+    --border: 222 22% 18%;
+    --input: 222 22% 18%;
+    --ring: 47.9 95.8% 63.1%;
+
+    /* Dark Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(47.9 95.8% 63.1%), hsl(47.9 95.8% 53.1%));
+    --gradient-success: linear-gradient(135deg, hsl(160 84% 55%), hsl(160 84% 45%));
+    --gradient-hero: linear-gradient(135deg, hsl(47.9 95.8% 63.1%) 0%, hsl(160 84% 55%) 100%);
+
+    /* Dark Shadows */
+    --shadow-learning: 0 4px 24px hsl(47.9 95.8% 63.1% / 0.2);
+    --shadow-success: 0 4px 24px hsl(160 84% 55% / 0.2);
+    --shadow-card: 0 2px 8px hsl(0 0% 0% / 0.3);
+
+    /* Sidebar Dark */
+    --sidebar-background: 222 22% 8%;
+    --sidebar-foreground: 0 0% 85%;
+    --sidebar-primary: 47.9 95.8% 63.1%;
+    --sidebar-primary-foreground: 222 22% 5%;
+    --sidebar-accent: 222 22% 12%;
+    --sidebar-accent-foreground: 0 0% 85%;
+    --sidebar-border: 222 22% 18%;
+    --sidebar-ring: 47.9 95.8% 63.1%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-satoshi;
+  }
+}
+
+@layer components {
+  /* Custom component styles */
+  .hover-scale {
+    @apply transition-transform duration-200 hover:scale-105;
+  }
+  
+  .story-link {
+    @apply relative inline-block after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-primary after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left;
+  }
+}
