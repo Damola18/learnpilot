@@ -112,13 +112,13 @@ export default function Dashboard() {
           </div>
           <div className="flex gap-3">
             <Button asChild size="lg" className="shadow-learning">
-              <Link to="/create-path">
+              <Link to="/dashboard/create-path">
                 <Plus className="w-4 h-4 mr-2" />
                 Create New Path
               </Link>
             </Button>
             <Button variant="outline" size="lg" asChild>
-              <Link to="/mentor">
+              <Link to="/dashboard/mentor">
                 <Brain className="w-4 h-4 mr-2" />
                 Ask AI Mentor
               </Link>
@@ -131,7 +131,7 @@ export default function Dashboard() {
             <CardContent className="p-6 rounded-md border border--neutral-700">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm opacity-90 text-muted-foreground">Learning Streak</p>
+                  <p className="text-sm opacity-90 text-foreground">Learning Streak</p>
                   <p className="text-2xl font-bold text-foreground">7 Days</p>
                 </div>
                 <Zap className="w-8 h-8 text-primary" />

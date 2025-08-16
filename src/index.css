@@ -5,7 +5,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* LearnPilot Design System - All colors must be HSL */
+
 
 @layer base {
   :root {
@@ -57,7 +57,6 @@
     --input: 220 13% 91%;
     --ring: 194 100% 42%;
 
-    /* LearnPilot Brand Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(194 100% 42%), hsl(194 100% 52%));
     --gradient-success: linear-gradient(135deg, hsl(160 84% 39%), hsl(160 84% 49%));
     --gradient-hero: linear-gradient(135deg, hsl(194 100% 42%) 0%, hsl(160 84% 39%) 100%);

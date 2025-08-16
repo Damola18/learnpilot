@@ -23,7 +23,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { login } = useAuth();
+  const { signIn } = useAuth();
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -36,25 +36,23 @@ export default function Login() {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      
-      // Mock user data - in a real app, this would come from the API
-      const userData = {
-        id: "1",
-        name: "Damola Olutoke",
-        email: data.email,
-        avatar: "/placeholder-avatar.jpg"
-      };
-      
-      login(userData);
+    const { error } = await signIn(data.email, data.password);
+    
+    setIsLoading(false);
+    
+    if (error) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to sign in. Please try again.",
+        variant: "destructive",
+      });
+    } else {
       toast({
         title: "Success",
         description: "Logged in successfully!",
       });
-      navigate("/");
-    }, 1000);
+      navigate("/dashboard");
+    }
   };
 
   return (

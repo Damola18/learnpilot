@@ -31,17 +31,17 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 
 const navigationItems = [
-  { title: "Dashboard", url: "/", icon: Home },
-  { title: "My Paths", url: "/paths", icon: BookOpen },
-  { title: "Progress", url: "/progress", icon: BarChart3 },
-  { title: "AI Mentor", url: "/mentor", icon: MessageCircle },
-  { title: "Resources", url: "/resources", icon: Library },
+  { title: "Dashboard", url: "/dashboard", icon: Home },
+  { title: "My Paths", url: "/dashboard/paths", icon: BookOpen },
+  { title: "Progress", url: "/dashboard/progress", icon: BarChart3 },
+  { title: "AI Mentor", url: "/dashboard/mentor", icon: MessageCircle },
+  { title: "Resources", url: "/dashboard/resources", icon: Library },
 ];
 
 const quickActions = [
-  { title: "Create Path", url: "/create-path", icon: Target },
-  { title: "Take Assessment", url: "/assessment", icon: Brain },
-  { title: "Achievements", url: "/achievements", icon: Trophy },
+  { title: "Create Path", url: "/dashboard/create-path", icon: Target },
+  { title: "Take Assessment", url: "/dashboard/assessment", icon: Brain },
+  { title: "Achievements", url: "/dashboard/achievements", icon: Trophy },
 ];
 
 export function AppSidebar() {

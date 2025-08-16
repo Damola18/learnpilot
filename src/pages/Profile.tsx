@@ -29,13 +29,13 @@ const Profile = () => {
   const { user } = useAuth();
   
   const userData = {
-    name: user?.name || "Damola Olutoke",
-    email: user?.email || "damola@example.com",
+    name: user?.user_metadata?.name || "Damo",
+    email: user?.email,
     phone: "+1 (555) 123-4567",
     location: "New York, USA",
     joinDate: "January 2024",
     bio: "Passionate learner exploring new technologies and building amazing things.",
-    avatar: user?.avatar || "/placeholder-avatar.jpg"
+    avatar: "/placeholder-avatar.jpg"
   };
 
   const stats = {
