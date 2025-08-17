@@ -19,6 +19,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import NotFound from "./pages/NotFound";
+import Index from "./pages/Index";
 
 const queryClient = new QueryClient();
 
@@ -30,13 +31,15 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            {/* Authentication routes */}
+
+            <Route path="/" element={<Index />} />
+            
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             
             {/* Main app routes */}
-            <Route path="/" element={<AppLayout />}>
+            <Route path="/dashboard" element={<AppLayout />}>
               <Route index element={<Dashboard />} />
               <Route path="paths" element={<LearningPaths />} />
               <Route path="create-path" element={<CreatePath />} />

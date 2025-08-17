@@ -13,10 +13,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function AppHeader() {
   const [isDark, setIsDark] = useState(false);
-
+  const { user } = useAuth()
   const toggleTheme = () => {
     setIsDark(!isDark);
     document.documentElement.classList.toggle("dark");
@@ -115,8 +116,8 @@ export function AppHeader() {
               <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                 <Avatar className="h-9 w-9">
                   <AvatarImage src="/avatars/user.jpg" alt="@user" />
-                  <AvatarFallback className="bg-gradient-primary text-primary dark:text-white">
-                    JD
+                  <AvatarFallback className="bg-gradient-primary text-white">
+                     {user?.user_metadata?.name.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -124,9 +125,9 @@ export function AppHeader() {
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">Damola Olutoke</p>
+                  <p className="text-sm font-medium leading-none">{user?.user_metadata?.name}</p>
                   <p className="text-xs leading-none text-muted-foreground">
-                    damola@example.com
+                    {user?.email}
                   </p>
                 </div>
               </DropdownMenuLabel>

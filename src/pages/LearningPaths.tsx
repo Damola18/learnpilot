@@ -332,7 +332,7 @@ export default function LearningPaths() {
           </p>
         </div>
         <Button asChild size="lg" className="shadow-learning">
-          <Link to="/create-path">
+          <Link to="/dashboard/create-path">
             <Plus className="w-4 h-4 mr-2" />
             Create New Path
           </Link>
@@ -570,7 +570,7 @@ export default function LearningPaths() {
               Try adjusting your filters or create a new learning path to get started.
             </p>
             <Button asChild>
-              <Link to="/create-path">
+              <Link to="/dashboard/create-path">
                 <Plus className="w-4 h-4 mr-2" />
                 Create Your First Path
               </Link>
