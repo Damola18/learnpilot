@@ -51,6 +51,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useLearningPaths } from '@/contexts/LearningPathsContext'
 
 interface LearningPath {
   id: number;
@@ -213,9 +214,17 @@ export default function LearningPaths() {
     estimatedTime: "",
     category: "",
   });
+
+  const { 
+    paths, 
+    getTotalPaths, 
+    getActivePaths, 
+    getCompletedPaths, 
+    getTotalHours 
+  } = useLearningPaths()
   const { toast } = useToast();
 
-  const filteredPaths = mockPaths.filter((path) => {
+  const filteredPaths = paths.filter((path) => {
     const matchesSearch = path.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       path.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       path.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -346,7 +355,7 @@ export default function LearningPaths() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Paths</p>
-                <p className="text-2xl font-bold text-foreground">{mockPaths.length}</p>
+                <p className="text-2xl font-bold text-foreground">{getTotalPaths()}</p>
               </div>
               <BookOpen className="w-8 h-8 text-primary" />
             </div>
@@ -359,7 +368,7 @@ export default function LearningPaths() {
               <div>
                 <p className="text-sm text-muted-foreground">Active Paths</p>
                 <p className="text-2xl font-bold text-foreground">
-                  {mockPaths.filter(p => p.status === "active").length}
+                  {getActivePaths()}
                 </p>
               </div>
               <TrendingUp className="w-8 h-8 text-warning" />
@@ -373,7 +382,7 @@ export default function LearningPaths() {
               <div>
                 <p className="text-sm text-muted-foreground">Completed</p>
                 <p className="text-2xl font-bold text-foreground">
-                  {mockPaths.filter(p => p.status === "completed").length}
+                  {getCompletedPaths()}
                 </p>
               </div>
               <Target className="w-8 h-8 text-success" />
@@ -387,7 +396,7 @@ export default function LearningPaths() {
               <div>
                 <p className="text-sm text-muted-foreground">Total Hours</p>
                 <p className="text-2xl font-bold text-foreground">
-                  {mockPaths.reduce((acc, path) => acc + parseInt(path.estimatedTime), 0)}h
+                  {getTotalHours()}h
                 </p>
               </div>
               <Clock className="w-8 h-8 text-primary" />
@@ -494,20 +503,20 @@ export default function LearningPaths() {
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => handleViewDetails(path)}>
+                    <DropdownMenuItem onClick={() => handleViewDetails({...path, id: Number(path.id)})}>
                       <Eye className="w-4 h-4 mr-2" />
                       View Details
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleEditPath(path)}>
+                    <DropdownMenuItem onClick={() => handleEditPath({...path, id: Number(path.id)})}>
                       <Edit className="w-4 h-4 mr-2" />
                       Edit Path
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleDownloadProgress(path)}>
+                    <DropdownMenuItem onClick={() => handleDownloadProgress({...path, id: Number(path.id)})}>
                       <Download className="w-4 h-4 mr-2" />
                       Download Progress
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => handleArchivePath(path)} className="text-destructive">
+                    <DropdownMenuItem onClick={() => handleArchivePath({...path, id: Number(path.id)})} className="text-destructive">
                       <Archive className="w-4 h-4 mr-2" />
                       Archive Path
                     </DropdownMenuItem>
@@ -553,7 +562,7 @@ export default function LearningPaths() {
                   </div>
                 </div>
 
-                {getActionButton(path)}
+                {getActionButton({...path, id: Number(path.id)})}
               </div>
             </CardContent>
           </Card>

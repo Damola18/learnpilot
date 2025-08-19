@@ -17,6 +17,8 @@ import {
     iqaiCurriculumService,
     type GeneratedLearningPath,
 } from '@/services/iqaiCurriculumService'
+import { useLearningPaths } from '@/contexts/LearningPathsContext'
+import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -89,6 +91,8 @@ export default function CreatePath() {
         useState<GeneratedLearningPath | null>(null)
     const [generationError, setGenerationError] = useState<string | null>(null)
     const totalSteps = 3
+    const { addPath } = useLearningPaths()
+    const navigate = useNavigate()
 
     const form = useForm<z.infer<typeof createPathSchema>>({
         resolver: zodResolver(createPathSchema),
@@ -164,6 +168,17 @@ export default function CreatePath() {
             )
         } finally {
             setIsGenerating(false)
+        }
+    }
+
+    const handleSavePath = () => {
+        if (generatedPath) {
+            const formData = form.getValues()
+            addPath(generatedPath, formData)
+            // Optionally navigate to paths page
+            setTimeout(() => {
+                navigate('/dashboard/paths')
+            }, 1500)
         }
     }
 
@@ -485,6 +500,13 @@ export default function CreatePath() {
                             }}
                         >
                             Create Another Path
+                        </Button>
+                        <Button 
+                            onClick={handleSavePath}
+                            className='bg-green-600 hover:bg-green-700'
+                        >
+                            <CheckCircle2 className='w-4 h-4 mr-2' />
+                            Save to My Paths
                         </Button>
                         <Button className='bg-gradient-primary'>
                             Start Learning Journey

@@ -119,15 +119,15 @@ class IQAICurriculumService {
         - Assessment methods
       `
 
-            // Use the agent to generate the learning path
-            const response = await this.runner.run(this.session, prompt)
+        // Use the agent to generate the learning path
+        const response = await this.runner.run(this.session, prompt)
 
-            // Parse the agent's response and structure it
-            return this.parseAgentResponse(
-                response,
-                learnerProfile,
-                timeConstraints,
-            )
+        // Parse the agent's response and structure it
+        return this.parseAgentResponse(
+            response,
+            learnerProfile,
+            timeConstraints,
+        )
         } catch (error) {
             console.error('Error generating learning path with IQAI:', error)
             // Fallback to mock data if agent fails
