@@ -1,6 +1,7 @@
 // CURRICULUM DESIGNER (dynamic import of ADK to avoid client-side bundling)
 export async function createCurriculumDesigner() {
-    // Dynamically import the ADK so this module can be safely imported in the browser
+    // dynamically import the ADK in Node runtime only
+    console.log('createCurriculumDesigner: dynamic importing @iqai/adk')
     const { AgentBuilder, createTool } = await import('@iqai/adk')
 
     // Define tools using createTool after the dynamic import
@@ -54,20 +55,8 @@ export async function createCurriculumDesigner() {
                             'Demonstrate core skills',
                         ],
                     },
-                    {
-                        module_id: 'module_2',
-                        title: 'Intermediate Applications',
-                        sequence: 2,
-                        estimated_duration: '3 weeks',
-                        prerequisites: ['module_1'],
-                        learning_objectives: [
-                            'Apply concepts in practice',
-                            'Solve complex problems',
-                            'Integrate knowledge areas',
-                        ],
-                    },
                 ],
-                total_estimated_time: '5 weeks',
+                total_estimated_time: '2 weeks',
                 difficulty_progression: 'gradual',
             }
         },
@@ -83,81 +72,94 @@ export async function createCurriculumDesigner() {
                 subject: 'Computer Science',
                 competency_map: {
                     domains: ['Technology'],
-                    skills: [
-                        {
-                            id: 'skill_1',
-                            name: 'Basic programming concepts',
-                            domain: 'Technology',
-                            level: 3,
-                            prerequisites: [],
-                        },
-                        {
-                            id: 'skill_2',
-                            name: 'Intermediate programming application',
-                            domain: 'Technology',
-                            level: 4,
-                            prerequisites: ['skill_1'],
-                        },
-                        {
-                            id: 'skill_3',
-                            name: 'Advanced programming mastery',
-                            domain: 'Technology',
-                            level: 5,
-                            prerequisites: ['skill_2'],
-                        },
-                    ],
-                    progression_rules: [
-                        {
-                            from_skill: 'skill_1',
-                            to_skill: 'skill_2',
-                            min_mastery_level: 80,
-                        },
-                        {
-                            from_skill: 'skill_2',
-                            to_skill: 'skill_3',
-                            min_mastery_level: 85,
-                        },
-                    ],
+                    skills: [],
+                    progression_rules: [],
                 },
             }
         },
     })
 
     // Build the agent and return the runtime objects
-    const { agent, runner, session } = await AgentBuilder.create(
-        'curriculum_designer',
+    console.log(
+        'createCurriculumDesigner: building agent (curriculum_designer)',
     )
-        .withModel('gemini-2.5-flash')
-        .withDescription(
-            'AI Curriculum Designer for creating personalized learning paths',
-        )
-        .withInstruction(
-            `
-            You are an expert curriculum designer AI that creates personalized learning paths.
+    let agent
+    try {
+        // Try the standard AgentBuilder pattern first
+        agent = AgentBuilder.create('curriculum_designer')
+            .withModel('gemini-2.5-flash')
+            .withDescription(
+                'AI Curriculum Designer for creating personalized learning paths',
+            )
+            .withInstruction(
+                `
+                You are an expert curriculum designer AI that creates personalized learning paths.
 
-            Your responsibilities:
-            1. Analyze learner profiles and assessment data to understand current competencies
-            2. Design comprehensive curricula aligned with learning goals and standards
-            3. Map competencies and create logical skill progression sequences
-            4. Recommend appropriate learning resources based on learner preferences
-            5. Adapt curricula dynamically based on progress and feedback
+                Your responsibilities:
+                1. Analyze learner profiles and assessment data to understand current competencies
+                2. Design comprehensive curricula aligned with learning goals and standards
+                3. Map competencies and create logical skill progression sequences
+                4. Recommend appropriate learning resources based on learner preferences
+                5. Adapt curricula dynamically based on progress and feedback
 
-            Always prioritize:
-            - Learner-centered design principles
-            - Evidence-based educational practices
-            - Clear learning objectives and outcomes
-            - Appropriate scaffolding and differentiation
-            - Regular assessment and feedback loops
+                Always prioritize:
+                - Learner-centered design principles
+                - Evidence-based educational practices
+                - Clear learning objectives and outcomes
+                - Appropriate scaffolding and differentiation
+                - Regular assessment and feedback loops
 
-            Use the provided tools to analyze, design, and adapt learning experiences.
-        `,
+                Use the provided tools to analyze, design, and adapt learning experiences.
+            `,
+            )
+            .withTools(
+                assessmentAnalyzerTool,
+                learningPathGeneratorTool,
+                competencyMapperTool,
+            )
+            .build()
+    } catch (builderError) {
+        console.log(
+            'createCurriculumDesigner: AgentBuilder.create failed, trying new AgentBuilder():',
+            builderError.message,
         )
-        .withTools(
-            assessmentAnalyzerTool,
-            learningPathGeneratorTool,
-            competencyMapperTool,
-        )
-        .build()
+        // Fallback: try direct constructor if create() doesn't exist
+        agent = new (AgentBuilder as any)({ name: 'curriculum_designer' })
+            .withModel('gemini-2.5-flash')
+            .withDescription(
+                'AI Curriculum Designer for creating personalized learning paths',
+            )
+            .withInstruction(
+                `
+                You are an expert curriculum designer AI that creates personalized learning paths.
+
+                Your responsibilities:
+                1. Analyze learner profiles and assessment data to understand current competencies
+                2. Design comprehensive curricula aligned with learning goals and standards
+                3. Map competencies and create logical skill progression sequences
+                4. Recommend appropriate learning resources based on learner preferences
+                5. Adapt curricula dynamically based on progress and feedback
+
+                Always prioritize:
+                - Learner-centered design principles
+                - Evidence-based educational practices
+                - Clear learning objectives and outcomes
+                - Appropriate scaffolding and differentiation
+                - Regular assessment and feedback loops
+
+                Use the provided tools to analyze, design, and adapt learning experiences.
+            `,
+            )
+            .withTools(
+                assessmentAnalyzerTool,
+                learningPathGeneratorTool,
+                competencyMapperTool,
+            )
+            .build()
+    }
+
+    const runner = agent.runner()
+    const session = agent.createSession({})
 
     return { agent, runner, session }
 }
