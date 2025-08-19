@@ -1,4 +1,5 @@
-import { createCurriculumDesigner } from '../agents/curriculum-designer'
+// Note: Do NOT import or initialize the ADK in the browser. Use the server API to run the curriculum designer.
+// import { createCurriculumDesigner } from '../agents/curriculum-designer' // intentionally commented out
 
 // Types for the learning path generation
 export interface LearnerProfile {
@@ -61,12 +62,8 @@ class IQAICurriculumService {
     private session: any = null
 
     async initialize() {
-        if (!this.agent) {
-            const { agent, runner, session } = await createCurriculumDesigner()
-            this.agent = agent
-            this.runner = runner
-            this.session = session
-        }
+        // No client-side ADK initialization when using server API
+        return
     }
 
     async generateLearningPath(
@@ -75,62 +72,39 @@ class IQAICurriculumService {
         timeConstraints: TimeConstraints,
     ): Promise<GeneratedLearningPath> {
         try {
-            await this.initialize()
-
-            // Prepare the prompt for the curriculum designer agent
-            const prompt = `
-        Please create a comprehensive learning path based on the following requirements:
-
-        **Learner Profile:**
-        - Name: ${learnerProfile.title}
-        - Description: ${learnerProfile.description}
-        - Domain: ${learnerProfile.domain}
-        - Experience Level: ${learnerProfile.experienceLevel}
-        - Weekly Time Commitment: ${learnerProfile.timeCommitment} hours
-        - Motivation Level: ${learnerProfile.motivationLevel}/10
-
-        **Learning Goals:**
-        ${goals
-            .map(
-                (goal) => `
-        - ${goal.title}: ${goal.description} (Priority: ${goal.priority})
-          Target Competencies: ${goal.targetCompetencies.join(', ')}
-        `,
+            // Call server endpoint that runs the curriculum designer in Node
+            const res = await fetch(
+                'http://localhost:3001/generate-learning-path',
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        learnerProfile,
+                        goals,
+                        timeConstraints,
+                    }),
+                },
             )
-            .join('')}
 
-        **Time Constraints:**
-        - Timeline: ${timeConstraints.timeline}
-        - Weekly Hours: ${timeConstraints.weeklyHours}
-        - Preferred Pace: ${timeConstraints.preferredPace}
+            if (!res.ok) {
+                const text = await res.text()
+                throw new Error(`Server responded ${res.status}: ${text}`)
+            }
 
-        Please generate a detailed learning path that includes:
-        1. Multiple learning modules with clear progression
-        2. Specific competencies for each module
-        3. Recommended resources (videos, articles, exercises, projects)
-        4. Assessment strategies
-        5. Prerequisites and learning outcomes
+            const json = await res.json()
+            const raw = json.raw || JSON.stringify(json)
 
-        Format the response as a structured learning path with modules, each containing:
-        - Title and description
-        - Duration and difficulty level
-        - Key competencies to be developed
-        - Learning resources with estimated time
-        - Assessment methods
-      `
-
-        // Use the agent to generate the learning path
-        const response = await this.runner.run(this.session, prompt)
-
-        // Parse the agent's response and structure it
-        return this.parseAgentResponse(
-            response,
-            learnerProfile,
-            timeConstraints,
-        )
+            return this.parseAgentResponse(
+                raw,
+                learnerProfile,
+                timeConstraints,
+                goals,
+            )
         } catch (error) {
-            console.error('Error generating learning path with IQAI:', error)
-            // Fallback to mock data if agent fails
+            console.error(
+                'Error generating learning path with IQAI (client->server):',
+                error,
+            )
             return this.generateMockLearningPath(
                 learnerProfile,
                 goals,
@@ -139,28 +113,159 @@ class IQAICurriculumService {
         }
     }
 
-    private parseAgentResponse(
+    private async parseAgentResponse(
         response: any,
         learnerProfile: LearnerProfile,
         timeConstraints: TimeConstraints,
-    ): GeneratedLearningPath {
-        // Extract the text content from the agent response
-        const content = response.content || response.text || response.toString()
+        goals?: LearningGoal[],
+    ): Promise<GeneratedLearningPath> {
+        // Normalize response to string
+        const raw =
+            typeof response === 'string'
+                ? response
+                : response?.content ||
+                  response?.text ||
+                  JSON.stringify(response)
 
-        // For now, we'll create a structured response based on the learner profile
-        // In a real implementation, you would parse the agent's response more sophisticatedly
-        const modules = this.generateModulesFromProfile(
+        // Attempt to locate the first JSON object in the response
+        const jsonMatch = raw.match(/\{[\s\S]*\}/)
+
+        if (jsonMatch) {
+            try {
+                const parsed = JSON.parse(jsonMatch[0])
+
+                // Validate basic shape and provide defaults where needed
+                const id = parsed.id || `path-${Date.now()}`
+                const title = parsed.title || learnerProfile.title
+                const description =
+                    parsed.description ||
+                    `AI-generated learning path for ${learnerProfile.domain}`
+                const totalDuration =
+                    parsed.totalDuration || timeConstraints.timeline
+                const difficulty =
+                    parsed.difficulty || learnerProfile.experienceLevel
+
+                // If modules provided by agent, use them (normalize each module)
+                let modules: GeneratedModule[] = []
+                if (
+                    Array.isArray(parsed.modules) &&
+                    parsed.modules.length > 0
+                ) {
+                    modules = parsed.modules.map((m: any, idx: number) => ({
+                        id: m.id || `module-${idx + 1}`,
+                        title: m.title || `Module ${idx + 1}`,
+                        description:
+                            m.description ||
+                            `Module ${idx + 1} for ${learnerProfile.domain}`,
+                        duration:
+                            m.duration ||
+                            this.getModuleDuration(
+                                timeConstraints.weeklyHours,
+                                Math.max(parsed.modules.length, 1),
+                            ),
+                        difficulty:
+                            (m.difficulty as any) ||
+                            this.getModuleDifficulty(
+                                learnerProfile.experienceLevel,
+                                idx,
+                                Math.max(parsed.modules.length, 1),
+                            ),
+                        competencies:
+                            Array.isArray(m.competencies) &&
+                            m.competencies.length > 0
+                                ? m.competencies
+                                : m.competency
+                                ? [m.competency]
+                                : this.getModuleCompetencies(
+                                      learnerProfile.domain,
+                                      idx + 1,
+                                  ),
+                        resources: Array.isArray(m.resources)
+                            ? m.resources.map((r: any) => ({
+                                  type: r.type || 'article',
+                                  title:
+                                      r.title ||
+                                      `${learnerProfile.domain} Resource ${
+                                          idx + 1
+                                      }`,
+                                  url: r.url,
+                                  estimatedTime:
+                                      r.estimatedTime || '30 minutes',
+                              }))
+                            : this.generateResources(
+                                  learnerProfile.domain,
+                                  idx + 1,
+                              ),
+                        assessments: Array.isArray(m.assessments)
+                            ? m.assessments.map((a: any) => ({
+                                  type: a.type || 'quiz',
+                                  title:
+                                      a.title || `Module ${idx + 1} Assessment`,
+                                  description: a.description || 'Assessment',
+                              }))
+                            : this.generateAssessments(idx + 1),
+                    }))
+                } else {
+                    // No modules returned -> fall back to goal-driven generation
+                    modules = this.generateModulesFromProfile(
+                        learnerProfile,
+                        timeConstraints,
+                        goals,
+                    )
+                }
+
+                const prerequisites =
+                    Array.isArray(parsed.prerequisites) &&
+                    parsed.prerequisites.length > 0
+                        ? parsed.prerequisites
+                        : this.getPrerequisites(
+                              learnerProfile.domain,
+                              learnerProfile.experienceLevel,
+                          )
+                const outcomes =
+                    Array.isArray(parsed.outcomes) && parsed.outcomes.length > 0
+                        ? parsed.outcomes
+                        : this.getLearningOutcomes(
+                              learnerProfile.domain,
+                              learnerProfile.experienceLevel,
+                          )
+
+                return {
+                    id,
+                    title,
+                    description,
+                    totalDuration,
+                    difficulty,
+                    modules,
+                    prerequisites,
+                    outcomes,
+                }
+            } catch (err) {
+                console.warn(
+                    'iqaiCurriculumService: failed to parse agent JSON output, falling back to generated path',
+                    err,
+                )
+                // fall through to fallback
+            }
+        } else {
+            console.warn(
+                'iqaiCurriculumService: no JSON object found in agent response, using fallback generation',
+            )
+        }
+
+        // Fallback: use goal-driven generation but treat it as authoritative for now
+        const fallbackModules = this.generateModulesFromProfile(
             learnerProfile,
             timeConstraints,
+            goals,
         )
-
         return {
             id: `path-${Date.now()}`,
             title: learnerProfile.title,
             description: `AI-generated learning path for ${learnerProfile.domain}`,
             totalDuration: timeConstraints.timeline,
             difficulty: learnerProfile.experienceLevel,
-            modules,
+            modules: fallbackModules,
             prerequisites: this.getPrerequisites(
                 learnerProfile.domain,
                 learnerProfile.experienceLevel,
@@ -175,38 +280,132 @@ class IQAICurriculumService {
     private generateModulesFromProfile(
         learnerProfile: LearnerProfile,
         timeConstraints: TimeConstraints,
+        goals?: LearningGoal[],
     ): GeneratedModule[] {
         const moduleCount = this.getModuleCount(timeConstraints.timeline)
         const modules: GeneratedModule[] = []
 
-        for (let i = 0; i < moduleCount; i++) {
-            modules.push({
-                id: `module-${i + 1}`,
-                title: this.getModuleTitle(
-                    learnerProfile.domain,
-                    i + 1,
-                    learnerProfile.experienceLevel,
-                ),
-                description: this.getModuleDescription(
-                    learnerProfile.domain,
-                    i + 1,
-                ),
-                duration: this.getModuleDuration(
-                    timeConstraints.weeklyHours,
-                    moduleCount,
-                ),
-                difficulty: this.getModuleDifficulty(
-                    learnerProfile.experienceLevel,
-                    i,
-                    moduleCount,
-                ),
-                competencies: this.getModuleCompetencies(
-                    learnerProfile.domain,
-                    i + 1,
-                ),
-                resources: this.generateResources(learnerProfile.domain, i + 1),
-                assessments: this.generateAssessments(i + 1),
-            })
+        // If goals are provided, generate modules that map to goals dynamically
+        if (goals && goals.length > 0) {
+            // Create a simple progression per goal: intro, practice, project/assessment
+            const modulesPerGoal = Math.max(
+                1,
+                Math.floor(moduleCount / goals.length),
+            )
+            let idx = 0
+
+            for (const goal of goals) {
+                for (
+                    let step = 0;
+                    step < modulesPerGoal && idx < moduleCount;
+                    step++, idx++
+                ) {
+                    const stepName =
+                        step === 0
+                            ? `Intro to ${goal.title}`
+                            : step === modulesPerGoal - 1
+                            ? `Project: ${goal.title}`
+                            : `${goal.title} Practice ${step}`
+
+                    modules.push({
+                        id: `module-${idx + 1}`,
+                        title: stepName,
+                        description: `${goal.title}: ${
+                            goal.description
+                        }. This module focuses on ${goal.targetCompetencies.join(
+                            ', ',
+                        )}.`,
+                        duration: this.getModuleDuration(
+                            timeConstraints.weeklyHours,
+                            moduleCount,
+                        ),
+                        difficulty: this.getModuleDifficulty(
+                            learnerProfile.experienceLevel,
+                            idx,
+                            moduleCount,
+                        ),
+                        competencies: goal.targetCompetencies.length
+                            ? goal.targetCompetencies
+                            : this.getModuleCompetencies(
+                                  learnerProfile.domain,
+                                  idx + 1,
+                              ),
+                        resources: this.generateResources(
+                            learnerProfile.domain,
+                            idx + 1,
+                        ),
+                        assessments: this.generateAssessments(idx + 1),
+                    })
+                }
+            }
+
+            // If we still need more modules, fill with domain-based modules
+            while (modules.length < moduleCount) {
+                const i = modules.length
+                modules.push({
+                    id: `module-${i + 1}`,
+                    title: this.getModuleTitle(
+                        learnerProfile.domain,
+                        i + 1,
+                        learnerProfile.experienceLevel,
+                    ),
+                    description: this.getModuleDescription(
+                        learnerProfile.domain,
+                        i + 1,
+                    ),
+                    duration: this.getModuleDuration(
+                        timeConstraints.weeklyHours,
+                        moduleCount,
+                    ),
+                    difficulty: this.getModuleDifficulty(
+                        learnerProfile.experienceLevel,
+                        i,
+                        moduleCount,
+                    ),
+                    competencies: this.getModuleCompetencies(
+                        learnerProfile.domain,
+                        i + 1,
+                    ),
+                    resources: this.generateResources(
+                        learnerProfile.domain,
+                        i + 1,
+                    ),
+                    assessments: this.generateAssessments(i + 1),
+                })
+            }
+        } else {
+            for (let i = 0; i < moduleCount; i++) {
+                modules.push({
+                    id: `module-${i + 1}`,
+                    title: this.getModuleTitle(
+                        learnerProfile.domain,
+                        i + 1,
+                        learnerProfile.experienceLevel,
+                    ),
+                    description: this.getModuleDescription(
+                        learnerProfile.domain,
+                        i + 1,
+                    ),
+                    duration: this.getModuleDuration(
+                        timeConstraints.weeklyHours,
+                        moduleCount,
+                    ),
+                    difficulty: this.getModuleDifficulty(
+                        learnerProfile.experienceLevel,
+                        i,
+                        moduleCount,
+                    ),
+                    competencies: this.getModuleCompetencies(
+                        learnerProfile.domain,
+                        i + 1,
+                    ),
+                    resources: this.generateResources(
+                        learnerProfile.domain,
+                        i + 1,
+                    ),
+                    assessments: this.generateAssessments(i + 1),
+                })
+            }
         }
 
         return modules
