@@ -97,7 +97,7 @@ export default function Dashboard() {
       : "Good evening";
 
   return (
-    <div className="p-6 space-y-8 max-w-7xl mx-auto">
+    <div className="p-6 space-y-8 mx-auto">
       {/* Welcome Section */}
       <div className="space-y-4">
         {/* <div className="w-full flex flex-col md:flex-row items-center justify-between"> */}
@@ -189,7 +189,7 @@ export default function Dashboard() {
                   Active Learning Paths
                 </CardTitle>
                 <Button variant="ghost" size="sm" asChild>
-                  <Link to="/paths">
+                  <Link to="/dashboard/paths">
                     View All <ArrowRight className="w-4 h-4 ml-1" />
                   </Link>
                 </Button>
