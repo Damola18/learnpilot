@@ -52,6 +52,7 @@ import { Label } from "@/components/ui/label";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useLearningPaths } from '@/contexts/LearningPathsContext'
+import { generateSlug } from '@/utils/slugUtils';
 
 interface LearningPath {
   id: number;
@@ -303,26 +304,34 @@ export default function LearningPaths() {
   };
 
   const getActionButton = (path: LearningPath) => {
+    const slug = generateSlug(path.title);
+    
     switch (path.status) {
       case "completed":
         return (
-          <Button variant="outline" size="sm">
-            <Star className="w-4 h-4 mr-2" />
-            Review
+          <Button variant="outline" size="sm" asChild>
+            <Link to={`/dashboard/paths/${slug}`}>
+              <Star className="w-4 h-4 mr-2" />
+              Review
+            </Link>
           </Button>
         );
       case "active":
         return (
-          <Button size="sm">
-            <PlayCircle className="w-4 h-4 mr-2" />
-            Continue
+          <Button size="sm" asChild>
+            <Link to={`/dashboard/paths/${slug}`}>
+              <PlayCircle className="w-4 h-4 mr-2" />
+              Continue
+            </Link>
           </Button>
         );
       case "not_started":
         return (
-          <Button variant="outline" size="sm">
-            <PlayCircle className="w-4 h-4 mr-2" />
-            Start Learning
+          <Button variant="outline" size="sm" asChild>
+            <Link to={`/dashboard/paths/${slug}`}>
+              <PlayCircle className="w-4 h-4 mr-2" />
+              Start Learning
+            </Link>
           </Button>
         );
       default:
@@ -506,10 +515,6 @@ export default function LearningPaths() {
                     <DropdownMenuItem onClick={() => handleViewDetails({...path, id: Number(path.id)})}>
                       <Eye className="w-4 h-4 mr-2" />
                       View Details
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleEditPath({...path, id: Number(path.id)})}>
-                      <Edit className="w-4 h-4 mr-2" />
-                      Edit Path
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleDownloadProgress({...path, id: Number(path.id)})}>
                       <Download className="w-4 h-4 mr-2" />
