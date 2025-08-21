@@ -74,7 +74,6 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="px-2">
-        {/* Main Navigation */}
         <SidebarGroup>
           <SidebarGroupLabel className="px-3 text-sidebar-foreground/60">
             {!collapsed && "Main Navigation"}
