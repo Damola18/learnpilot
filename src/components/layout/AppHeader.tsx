@@ -19,14 +19,14 @@ import { useNavigate } from "react-router-dom";
 export function AppHeader() {
   const [isDark, setIsDark] = useState(false);
   const { user, signOut } = useAuth();
-    const navigate = useNavigate();
-  
+  const navigate = useNavigate();
+
   const toggleTheme = () => {
     setIsDark(!isDark);
     document.documentElement.classList.toggle("dark");
   };
 
-    const handleSignOut = async () => {
+  const handleSignOut = async () => {
     await signOut();
     navigate("/");
   };
@@ -37,7 +37,7 @@ export function AppHeader() {
 
         <div className="flex items-center gap-4">
           <SidebarTrigger className="hover:bg-accent hover:text-accent-foreground" />
-          
+
           <div className="relative max-w-md w-full">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -69,7 +69,7 @@ export function AppHeader() {
             )}
           </Button>
 
-          
+
 
           {/* User Menu */}
           <DropdownMenu>
@@ -78,7 +78,7 @@ export function AppHeader() {
                 <Avatar className="h-9 w-9">
                   <AvatarImage src="/avatars/user.jpg" alt="@user" />
                   <AvatarFallback className="bg-gradient-primary text-white">
-                     {user?.user_metadata?.name.split(' ').map(n => n[0]).join('')}
+                    {user?.user_metadata?.name.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -101,7 +101,7 @@ export function AppHeader() {
                 <span>Settings</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-             <DropdownMenuItem onClick={handleSignOut}>
+              <DropdownMenuItem onClick={handleSignOut}>
                 <span>Log out</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
