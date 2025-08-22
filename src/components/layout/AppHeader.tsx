@@ -14,23 +14,30 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export function AppHeader() {
   const [isDark, setIsDark] = useState(false);
-  const { user } = useAuth()
+  const { user, signOut } = useAuth();
+    const navigate = useNavigate();
+  
   const toggleTheme = () => {
     setIsDark(!isDark);
     document.documentElement.classList.toggle("dark");
   };
 
+    const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
+
   return (
     <header className="h-16 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="flex items-center justify-between px-6 h-full">
-        {/* Left Section */}
+
         <div className="flex items-center gap-4">
           <SidebarTrigger className="hover:bg-accent hover:text-accent-foreground" />
           
-          {/* Search */}
           <div className="relative max-w-md w-full">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -40,9 +47,8 @@ export function AppHeader() {
           </div>
         </div>
 
-        {/* Right Section */}
         <div className="flex items-center gap-3">
-          {/* Streak Counter */}
+
           <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-warning-muted border border-warning/20">
             <Zap className="w-4 h-4 text-warning" />
             <span className="text-sm font-medium text-warning-foreground">
@@ -50,7 +56,6 @@ export function AppHeader() {
             </span>
           </div>
 
-          {/* Theme Toggle */}
           <Button
             variant="ghost"
             size="icon"
@@ -64,51 +69,7 @@ export function AppHeader() {
             )}
           </Button>
 
-          {/* Notifications */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative w-9 h-9">
-                <Bell className="w-4 h-4" />
-                <Badge
-                  variant="destructive"
-                  className="absolute -top-1 -right-1 w-5 h-5 p-0 text-xs flex items-center justify-center"
-                >
-                  3
-                </Badge>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
-              <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="flex flex-col items-start space-y-1 p-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-success rounded-full"></div>
-                  <span className="font-medium">Path Completed!</span>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  You've finished "React Fundamentals" - time to celebrate! 🎉
-                </p>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="flex flex-col items-start space-y-1 p-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-primary rounded-full"></div>
-                  <span className="font-medium">New AI Insights</span>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Your mentor has new personalized recommendations ready.
-                </p>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="flex flex-col items-start space-y-1 p-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-warning rounded-full"></div>
-                  <span className="font-medium">Weekly Goal Reminder</span>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  You need 2.5 more hours to reach your weekly learning goal.
-                </p>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          
 
           {/* User Menu */}
           <DropdownMenu>
@@ -140,7 +101,7 @@ export function AppHeader() {
                 <span>Settings</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+             <DropdownMenuItem onClick={handleSignOut}>
                 <span>Log out</span>
               </DropdownMenuItem>
             </DropdownMenuContent>

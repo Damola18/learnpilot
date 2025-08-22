@@ -10,12 +10,13 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  confirmPassword: z.string(),
+  confirmPassword: z.string().min(1, "Please confirm your password"),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -27,8 +28,9 @@ export default function Register() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const navigate = useNavigate();
   const { toast } = useToast();
+  const { signUp } = useAuth();
+  const navigate = useNavigate();
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -38,20 +40,30 @@ export default function Register() {
       password: "",
       confirmPassword: "",
     },
+    mode: "onChange", 
   });
+
+  const password = form.watch("password");
+  const confirmPassword = form.watch("confirmPassword");
+  const passwordsMatch = password === confirmPassword && confirmPassword.length > 0;
+  const showPasswordMismatch = confirmPassword.length > 0 && !passwordsMatch;
 
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
+    const { error } = await signUp(data.email, data.password, data.name);
+    
+    setIsLoading(false);
+    
+    if (error) {
       toast({
-        title: "Success",
-        description: "Account created successfully! Please check your email to verify your account.",
+        title: "Error",
+        description: error.message || "Failed to create account. Please try again.",
+        variant: "destructive",
       });
-      navigate("/login");
-    }, 1000);
+    } else {
+      navigate("/confirm-email");
+    }
   };
 
   return (
@@ -162,7 +174,11 @@ export default function Register() {
                           {...field}
                           type={showConfirmPassword ? "text" : "password"}
                           placeholder="Confirm your password"
-                          className="pl-10 pr-10"
+                          className={`pl-10 pr-10 ${
+                            showPasswordMismatch 
+                              ? "border-red-500 focus:border-red-500" 
+                              : ""
+                          }`}
                           disabled={isLoading}
                         />
                         <Button
@@ -181,6 +197,12 @@ export default function Register() {
                         </Button>
                       </div>
                     </FormControl>
+             
+                    {showPasswordMismatch && (
+                      <p className="text-sm text-red-500 mt-1">
+                        Passwords don't match
+                      </p>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -217,4 +239,4 @@ export default function Register() {
       </Card>
     </div>
   );
-} 
+}
