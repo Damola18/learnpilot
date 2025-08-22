@@ -241,46 +241,6 @@ export default function Dashboard() {
           </Card>
 
           {/* Recent Activity */}
-          <Card className="border shadow-card">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-primary" />
-                Recent Activity
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {mockRecentActivity.map((activity, index) => (
-                  <div key={index} className="flex items-start gap-4">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mt-0.5">
-                      {activity.type === "completed" && (
-                        <CheckCircle2 className="w-4 h-4 text-success" />
-                      )}
-                      {activity.type === "started" && (
-                        <PlayCircle className="w-4 h-4 text-primary" />
-                      )}
-                      {activity.type === "achievement" && (
-                        <Award className="w-4 h-4 text-warning" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-card-foreground">
-                        {activity.title}
-                      </p>
-                      {activity.path && (
-                        <p className="text-sm text-muted-foreground">
-                          in {activity.path}
-                        </p>
-                      )}
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {activity.time}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Sidebar */}
@@ -347,26 +307,6 @@ export default function Dashboard() {
               <Button variant="outline" className="w-full mt-4" size="sm" asChild>
                 <Link to="/achievements">
                   View All Achievements
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* AI Mentor Quick Chat */}
-          <Card className="border-0 shadow-card bg-gradient-hero text-white">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Brain className="w-5 h-5" />
-                AI Mentor
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm opacity-90">
-                "Great progress on React! Ready to tackle advanced patterns like compound components?"
-              </p>
-              <Button variant="secondary" className="w-full" size="sm" asChild>
-                <Link to="/mentor">
-                  Chat with Mentor
                 </Link>
               </Button>
             </CardContent>
