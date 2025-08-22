@@ -98,7 +98,7 @@ const Progress = () => {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <ProgressBar value={item.progress} className="flex-1" />
+                <ProgressBar value={item.progress} className="flex-1 h-2 " />
                 <span className="text-sm font-medium text-primary">{item.progress}%</span>
               </div>
             </div>

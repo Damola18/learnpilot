@@ -285,8 +285,8 @@ export default function Dashboard() {
                   <div
                     key={index}
                     className={`p-5 rounded-lg border text-center transition-all ${achievement.unlocked
-                        ? "border-success/20 bg-success-muted"
-                        : "border-border bg-muted/50"
+                      ? "border-success/20 bg-success-muted"
+                      : "border-border bg-muted/50"
                       }`}
                   >
                     <achievement.icon
