@@ -624,6 +624,167 @@ class IQAICurriculumService {
             ],
         }
     }
+
+    // Save a learning path to the database
+    async saveLearningPath(
+        learningPath: GeneratedLearningPath,
+        learnerProfile?: LearnerProfile,
+        userId?: string,
+    ): Promise<{ success: boolean; pathId?: string; error?: string }> {
+        try {
+            console.log('Saving learning path to storage...')
+
+            const response = await fetch(
+                'http://localhost:3001/save-learning-path',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        learningPath,
+                        learnerProfile,
+                        userId: userId || `user-${Date.now()}`,
+                    }),
+                },
+            )
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`)
+            }
+
+            const data = await response.json()
+
+            if (data.success) {
+                console.log('Learning path saved successfully:', data.result)
+                return { success: true, pathId: learningPath.id }
+            } else {
+                throw new Error(data.error || 'Failed to save learning path')
+            }
+        } catch (error) {
+            console.error('Error saving learning path:', error)
+            return {
+                success: false,
+                error:
+                    error instanceof Error
+                        ? error.message
+                        : 'Unknown error occurred',
+            }
+        }
+    }
+
+    // Retrieve saved learning paths
+    async getStoredLearningPaths(filters?: {
+        difficulty?: 'beginner' | 'intermediate' | 'advanced'
+        domain?: string
+        userId?: string
+        limit?: number
+        status?: string
+    }): Promise<{ success: boolean; paths?: any[]; error?: string }> {
+        try {
+            console.log('Fetching stored learning paths...')
+
+            const queryParams = new URLSearchParams()
+            if (filters?.difficulty)
+                queryParams.append('difficulty', filters.difficulty)
+            if (filters?.domain) queryParams.append('domain', filters.domain)
+            if (filters?.userId) queryParams.append('userId', filters.userId)
+            if (filters?.limit)
+                queryParams.append('limit', filters.limit.toString())
+            if (filters?.status) queryParams.append('status', filters.status)
+
+            const url = `http://localhost:3001/learning-paths${
+                queryParams.toString() ? `?${queryParams.toString()}` : ''
+            }`
+
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`)
+            }
+
+            const data = await response.json()
+
+            if (data.success) {
+                console.log(
+                    'Learning paths retrieved successfully:',
+                    data.paths,
+                )
+                // The API returns paths directly in data.paths
+                const pathsData = data.paths || []
+                return { success: true, paths: pathsData }
+            } else {
+                throw new Error(
+                    data.error || 'Failed to retrieve learning paths',
+                )
+            }
+        } catch (error) {
+            console.error('Error retrieving learning paths:', error)
+            return {
+                success: false,
+                error:
+                    error instanceof Error
+                        ? error.message
+                        : 'Unknown error occurred',
+            }
+        }
+    }
+
+    // Get a specific learning path by ID
+    async getLearningPathById(
+        pathId: string,
+        userId?: string,
+    ): Promise<{ success: boolean; learningPath?: any; error?: string }> {
+        try {
+            console.log('Fetching learning path by ID:', pathId)
+
+            const queryParams = new URLSearchParams()
+            if (userId) queryParams.append('userId', userId)
+
+            const url = `http://localhost:3001/learning-path/${pathId}${
+                queryParams.toString() ? `?${queryParams.toString()}` : ''
+            }`
+
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`)
+            }
+
+            const data = await response.json()
+
+            if (data.success) {
+                console.log(
+                    'Learning path retrieved successfully:',
+                    data.result,
+                )
+                return { success: true, learningPath: data.result }
+            } else {
+                throw new Error(
+                    data.error || 'Failed to retrieve learning path',
+                )
+            }
+        } catch (error) {
+            console.error('Error retrieving learning path:', error)
+            return {
+                success: false,
+                error:
+                    error instanceof Error
+                        ? error.message
+                        : 'Unknown error occurred',
+            }
+        }
+    }
 }
 
 export const iqaiCurriculumService = new IQAICurriculumService()
