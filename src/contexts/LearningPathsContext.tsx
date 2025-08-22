@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { GeneratedLearningPath } from "@/services/iqaiCurriculumService";
+import { parseDurationToHours } from "@/utils/durationUtils";
 
 interface LearningPath {
   id: string;
@@ -95,7 +96,7 @@ export function LearningPathsProvider({ children }: { children: ReactNode }) {
       completedModules: 0,
       difficulty: formData.experienceLevel === 'beginner' ? 'Beginner' : 
                   formData.experienceLevel === 'intermediate' ? 'Intermediate' : 'Advanced',
-      estimatedTime: `${Math.ceil(generatedPath.modules.reduce((acc: number, module) => acc + (Number(module.duration) || 2), 0))} hours`,
+      estimatedTime: `${Math.ceil(generatedPath.modules.reduce((acc: number, module) => acc + parseDurationToHours(module.duration), 0))} hours`,
       category: formData.domain,
       status: "not_started",
       rating: 0,

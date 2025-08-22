@@ -628,9 +628,7 @@ export default function LearningPaths() {
                                 <div className='flex items-start justify-between'>
                                     <div className='flex-1'>
                                         <div className='flex items-center gap-3 mb-2'>
-                                            <div
-                                                className={`w-3 h-3 rounded-full ${path.color}`}
-                                            />
+                                            <div className='w-3 h-3 rounded-full bg-primary' />
                                             <h3 className='font-semibold text-lg text-card-foreground group-hover:text-primary transition-colors'>
                                                 {path.title}
                                             </h3>
@@ -735,12 +733,13 @@ export default function LearningPaths() {
                                         />
                                         <div className='flex items-center justify-between text-xs text-muted-foreground'>
                                             <span>
-                                                {path.completedModules}/
-                                                {path.totalModules} modules
+                                                0/{path.lessons} modules
                                             </span>
                                             <span>
                                                 Last accessed:{' '}
-                                                {path.lastAccessed}
+                                                {path.lastAccessed
+                                                    ? path.lastAccessed.toLocaleString()
+                                                    : 'Never'}
                                             </span>
                                         </div>
                                     </div>
@@ -751,7 +750,7 @@ export default function LearningPaths() {
                                     <div className='flex items-center gap-6 text-sm text-muted-foreground'>
                                         <div className='flex items-center gap-1'>
                                             <Clock className='w-4 h-4' />
-                                            <span>{path.estimatedTime}</span>
+                                            <span>{path.duration}</span>
                                         </div>
                                         <div className='flex items-center gap-1'>
                                             <Target className='w-4 h-4' />
@@ -759,9 +758,7 @@ export default function LearningPaths() {
                                         </div>
                                         <div className='flex items-center gap-1'>
                                             <Users className='w-4 h-4' />
-                                            <span>
-                                                {path.enrollments?.toLocaleString()}
-                                            </span>
+                                            <span>{path.lessons} lessons</span>
                                         </div>
                                         <div className='flex items-center gap-1'>
                                             <Star className='w-4 h-4 fill-current text-warning' />

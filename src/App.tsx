@@ -6,9 +6,11 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppLayout } from "./components/layout/AppLayout";
 import { AuthProvider } from "./contexts/AuthContext";
 import { LearningPathsProvider } from '@/contexts/LearningPathsContext'
+import { PathProgressProvider } from "./contexts/PathProgressContext";
 import Dashboard from "./pages/Dashboard";
 import CreatePath from "./pages/CreatePath";
 import LearningPaths from "./pages/LearningPaths";
+import PathDetail from "./pages/PathDetail";
 import Mentor from "./pages/Mentor";
 import Progress from "./pages/Progress";
 import Assessment from "./pages/Assessment";
@@ -27,12 +29,13 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <LearningPathsProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
+      <PathProgressProvider>
+        <LearningPathsProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
 
               <Route path="/" element={<Index />} />
               
@@ -44,6 +47,7 @@ const App = () => (
               <Route path="/dashboard" element={<AppLayout />}>
                 <Route index element={<Dashboard />} />
                 <Route path="paths" element={<LearningPaths />} />
+                <Route path="paths/:slug" element={<PathDetail />} />
                 <Route path="create-path" element={<CreatePath />} />
                 <Route path="mentor" element={<Mentor />} />
                 <Route path="progress" element={<Progress />} />
@@ -57,8 +61,9 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
-        </TooltipProvider>
-      </LearningPathsProvider>
+          </TooltipProvider>
+        </LearningPathsProvider>
+      </PathProgressProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
