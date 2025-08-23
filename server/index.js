@@ -160,8 +160,8 @@ app.post('/save-learning-path', async (req, res) => {
                 moduleCount: learningPath.modules?.length || 0,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
-                status: 'active',
-                curriculum: learningPath, // Store full curriculum
+                status: 'not_started', 
+                curriculum: learningPath,
                 ...metadata,
             }
 
@@ -191,7 +191,7 @@ app.post('/save-learning-path', async (req, res) => {
                 moduleCount: learningPath.modules?.length || 0,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
-                status: 'active',
+                status: 'not_started',
                 curriculum: learningPath,
                 ...metadata,
             }

@@ -92,7 +92,7 @@ const saveLearningPathTool = createTool({
                 moduleCount: learningPath.modules?.length || 0,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
-                status: 'active',
+                status: "not_started",
                 ...metadata,
             }
 
