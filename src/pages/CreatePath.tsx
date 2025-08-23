@@ -414,7 +414,7 @@ export default function CreatePath() {
                             >
                                 <CardHeader>
                                     <div className='flex items-center justify-between'>
-                                        <CardTitle className='flex items-center gap-2'>
+                                        <CardTitle className='flex items-center gap-2 '>
                                             <div className='w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold'>
                                                 {index + 1}
                                             </div>

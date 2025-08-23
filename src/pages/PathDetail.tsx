@@ -28,6 +28,7 @@ import { useLearningPaths } from '@/contexts/LearningPathsContext';
 import { slugToTitle } from '@/utils/slugUtils';
 import { GeneratedLearningPath } from '@/services/iqaiCurriculumService';
 import { usePathProgress } from "@/contexts/PathProgressContext";
+import { generateSlug } from "@/utils/slugUtils";
 
 interface PathItem {
   id: string;
@@ -71,34 +72,60 @@ export default function PathDetail() {
 
   useEffect(() => {
     const loadPathData = async () => {
-      if (!slug) {
-        setError("No path slug provided");
-        setLoading(false);
-        return;
-      }
-
       try {
-        const matchingPath = learningPaths.find(path => {
-          const pathSlug = path.title.toLowerCase()
-            .trim()
-            .replace(/[^\w\s-]/g, '')
-            .replace(/[\s_-]+/g, '-')
-            .replace(/^-+|-+$/g, '');
-          return pathSlug === slug;
-        });
-
-        if (!matchingPath) {
-          setError("Learning path not found");
+        if (!slug) {
+          setError("No path slug provided");
           setLoading(false);
           return;
         }
-
-        const convertedData = convertToPathData(matchingPath, slug);
         
-
-        initializePathProgress(matchingPath.id, slug, convertedData.totalItems);
+        // Find path by matching slug generated from title
+        const matchingPath = learningPaths.find(path => {
+            const generatedSlug = generateSlug(path.title);
+            return generatedSlug === slug;
+        });
+        
+        if (!matchingPath) {
+            console.error('❌ No matching path found!');
+            console.log('Looking for slug:', slug);
+            console.log('Available paths:', learningPaths.map(p => ({
+                id: p.id,
+                title: p.title,
+                generatedSlug: generateSlug(p.title)
+            })));
+            setError(`Learning path not found for slug: ${slug}`);
+            setLoading(false);
+            return;
+        }
+        
+        if (!matchingPath) {
+            console.error('❌ No matching path found!');
+            console.log('Available IDs:', learningPaths.map(p => p.id));
+            setError(`Learning path not found. Available paths: ${learningPaths.length}`);
+            setLoading(false);
+            return;
+        }
+        
+        console.log('✅ Found matching path:', {
+            id: matchingPath.id,
+            title: matchingPath.title,
+            hasGeneratedPath: !!matchingPath.generatedPath,
+            generatedPathType: typeof matchingPath.generatedPath
+        });
+        
+        // Use id as the slug for backward compatibility with progress tracking
+        const pathSlug = slug;
+        const convertedData = convertToPathData(matchingPath, pathSlug);
+        console.log('📊 Converted path data:', {
+          sectionsCount: convertedData.sections.length,
+          totalItems: convertedData.totalItems,
+          title: convertedData.title
+        });
+        
+        // Initialize progress using the path ID as slug
+        initializePathProgress(matchingPath.id, pathSlug, convertedData.totalItems);
       
-        const savedProgress = getPathProgress(matchingPath.id, slug);
+        const savedProgress = getPathProgress(matchingPath.id, pathSlug);
       
         if (savedProgress) {
         
@@ -134,7 +161,7 @@ export default function PathDetail() {
     };
 
     loadPathData();
-  }, [slug, learningPaths, getPathProgress, initializePathProgress, updatePath]);
+  }, [slug]); 
 
   const convertToPathData = (learningPath: any, slug: string): PathData => {
     const generatedPath = learningPath.generatedPath as GeneratedLearningPath;
@@ -159,13 +186,13 @@ export default function PathDetail() {
       id: module.id,
       title: `Section ${index + 1}: ${module.title}`,
       description: module.description,
-      totalDuration: `${module.duration} min`,
+      totalDuration: `${module.duration}`,
       isExpanded: index === 0, 
       items: [
         ...module.competencies.map((competency, compIndex) => ({
           id: `${module.id}-competency-${compIndex}`,
           title: competency,
-          duration: `${Math.ceil(Number(module.duration) / (module.competencies.length + module.resources.length + module.assessments.length))} min`,
+          duration: "5 min",
           status: "pending" as const,
           type: "lesson" as const,
           description: `Learn about ${competency}`
@@ -191,9 +218,10 @@ export default function PathDetail() {
     }));
 
     const totalItems = sections.reduce((sum, section) => sum + section.items.length, 0);
-    const completedItems = sections.reduce((sum, section) => 
-      sum + section.items.filter(item => item.status === 'done').length, 0
-    );
+    // const completedItems = sections.reduce((sum, section) => 
+    //   sum + section.items.filter(item => item.status === 'done').length, 0
+    // );
+    const completedItems = 0; 
 
     return {
       id: generatedPath.id,
@@ -201,30 +229,28 @@ export default function PathDetail() {
       slug: slug,
       description: generatedPath.description,
       sections: sections,
-      totalProgress: totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0,
+      // totalProgress: totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0,
+      totalProgress: 0,
       completedItems: completedItems,
       totalItems: totalItems,
       difficulty: generatedPath.difficulty,
-      estimatedTime: `${generatedPath.totalDuration} min`
+      estimatedTime: `${generatedPath.totalDuration}`
     };
   };
 
   const handleStatusChange = (sectionId: string, itemId: string, newStatus: string) => {
-    if (!pathData) return;
+    if (!pathData || !slug) return;
 
     const matchingPath = learningPaths.find(path => {
-      const pathSlug = path.title.toLowerCase()
-        .trim()
-        .replace(/[^\w\s-]/g, '')
-        .replace(/[\s_-]+/g, '-')
-        .replace(/^-+|-+$/g, '');
-      return pathSlug === slug;
+      const generatedSlug = generateSlug(path.title);
+      return generatedSlug === slug;
     });
   
     if (matchingPath) {
-      updateItemStatus(matchingPath.id, slug!, itemId, newStatus);
+      const pathSlug = slug;
+      updateItemStatus(matchingPath.id, pathSlug, itemId, newStatus);
       
-      const { progress, completed } = calculateProgress(matchingPath.id, slug!);
+      const { progress, completed } = calculateProgress(matchingPath.id, pathSlug);
 
       setPathData(prevPathData => {
         if (!prevPathData) return null;
@@ -281,7 +307,7 @@ export default function PathDetail() {
       case "in-progress":
         return <Circle className="w-5 h-5 text-warning fill-warning" />;
       case "skip":
-        return <X className="w-5 h-5 text-muted-foreground" />;
+        return <X className="w-5 h-5 text-muted-foreground fill-red-700" />;
       default:
         return <Circle className="w-5 h-5 text-muted-foreground" />;
     }

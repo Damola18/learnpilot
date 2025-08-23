@@ -48,7 +48,7 @@ const App = () => (
                 <Route path="/dashboard" element={<AppLayout />}>
                   <Route index element={<Dashboard />} />
                   <Route path="paths" element={<LearningPaths />} />
-                  <Route path="paths/:slug" element={<PathDetail />} />
+                  <Route path="/dashboard/paths/:slug" element={<PathDetail />} />
                   <Route path="create-path" element={<CreatePath />} />
                   <Route path="mentor" element={<Mentor />} />
                   <Route path="progress" element={<Progress />} />

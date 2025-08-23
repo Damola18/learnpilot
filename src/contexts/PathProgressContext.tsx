@@ -72,20 +72,34 @@ export function PathProgressProvider({ children }: { children: ReactNode }) {
         completedItems: 0,
         totalItems: 0
       };
-
+  
+      const previousStatus = currentProgress.items[itemId]?.status;
+      
       const updatedItems = {
         ...currentProgress.items,
         [itemId]: {
           id: itemId,
           status: status as "pending" | "done" | "in-progress" | "skip",
-          completedAt: status === 'done' ? new Date().toISOString() : undefined
+          completedAt: (status === 'done' || status === 'skip') ? new Date().toISOString() : undefined
         }
       };
-
-      const completedItems = Object.values(updatedItems).filter(item => item.status === 'done').length;
+  
+      const completedItems = Object.values(updatedItems).filter(item => 
+        item.status === 'done' || item.status === 'skip'
+      ).length;
+      
       const totalItems = Math.max(currentProgress.totalItems, Object.keys(updatedItems).length);
       const totalProgress = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
-
+  
+      console.log(`📊 Progress Update:`, {
+        itemId,
+        previousStatus,
+        newStatus: status,
+        completedItems,
+        totalItems,
+        totalProgress: `${totalProgress}%`
+      });
+  
       return {
         ...prev,
         [key]: {
