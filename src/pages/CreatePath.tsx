@@ -17,7 +17,6 @@ import {
     iqaiCurriculumService,
     type GeneratedLearningPath,
 } from '@/services/iqaiCurriculumService'
-import { useLearningPaths } from '@/contexts/LearningPathsContext'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -87,11 +86,11 @@ const timelineOptions = [
 export default function CreatePath() {
     const [currentStep, setCurrentStep] = useState(1)
     const [isGenerating, setIsGenerating] = useState(false)
+    const [isSaving, setIsSaving] = useState(false)
     const [generatedPath, setGeneratedPath] =
         useState<GeneratedLearningPath | null>(null)
     const [generationError, setGenerationError] = useState<string | null>(null)
     const totalSteps = 3
-    const { addPath } = useLearningPaths()
     const navigate = useNavigate()
 
     const form = useForm<z.infer<typeof createPathSchema>>({
@@ -171,14 +170,58 @@ export default function CreatePath() {
         }
     }
 
-    const handleSavePath = () => {
+    const handleSavePath = async () => {
         if (generatedPath) {
-            const formData = form.getValues()
-            addPath(generatedPath, formData)
-            // Optionally navigate to paths page
-            setTimeout(() => {
-                navigate('/dashboard/paths')
-            }, 1500)
+            setIsSaving(true)
+            setGenerationError(null)
+
+            try {
+                const formData = form.getValues()
+
+                // Prepare learner profile for storage
+                const learnerProfile = {
+                    id: `learner-${Date.now()}`,
+                    title: formData.title,
+                    description: formData.description,
+                    domain: formData.domain,
+                    experienceLevel: formData.experienceLevel as
+                        | 'beginner'
+                        | 'intermediate'
+                        | 'advanced',
+                    timeCommitment: formData.timeCommitment[0],
+                    motivationLevel: formData.motivationLevel[0],
+                }
+
+                // Save to database using the storage API
+                const saveResult = await iqaiCurriculumService.saveLearningPath(
+                    generatedPath,
+                    learnerProfile,
+                    `user-${Date.now()}`, // You can replace this with actual user ID from auth context
+                )
+
+                if (saveResult.success) {
+                    console.log('Learning path saved successfully!')
+                    // Navigate to paths page
+                    setTimeout(() => {
+                        navigate('/dashboard/paths')
+                    }, 1500)
+                } else {
+                    console.error(
+                        'Failed to save learning path:',
+                        saveResult.error,
+                    )
+                    setGenerationError(
+                        'Failed to save learning path. Please try again.',
+                    )
+                }
+            } catch (error) {
+                console.error('Error saving learning path:', error)
+                setGenerationError(
+                    'Failed to save learning path. Please try again.',
+                )
+            } finally {
+                setIsSaving(false)
+            }
         }
     }
 
@@ -501,12 +544,13 @@ export default function CreatePath() {
                         >
                             Create Another Path
                         </Button>
-                        <Button 
+                        <Button
                             onClick={handleSavePath}
-                            className='bg-green-600 hover:bg-green-700'
+                            disabled={isSaving}
+                            className='bg-green-600 hover:bg-green-700 disabled:opacity-50'
                         >
                             <CheckCircle2 className='w-4 h-4 mr-2' />
-                            Save to My Paths
+                            {isSaving ? 'Saving...' : 'Save to My Paths'}
                         </Button>
                         <Button className='bg-gradient-primary'>
                             Start Learning Journey
