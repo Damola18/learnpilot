@@ -106,7 +106,6 @@ const Progress = () => {
         </CardContent>
       </Card>
 
-      {/* Weekly Activity */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -135,3 +134,4 @@ const Progress = () => {
 };
 
 export default Progress;
+

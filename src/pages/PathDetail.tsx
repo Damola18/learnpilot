@@ -25,10 +25,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useLearningPaths } from '@/contexts/LearningPathsContext';
-import { slugToTitle } from '@/utils/slugUtils';
 import { GeneratedLearningPath } from '@/services/iqaiCurriculumService';
 import { usePathProgress } from "@/contexts/PathProgressContext";
-import { generateSlug } from "@/utils/slugUtils";
+import { iqaiCurriculumService } from "@/services/iqaiCurriculumService";
 
 interface PathItem {
   id: string;
@@ -74,34 +73,62 @@ export default function PathDetail() {
     const loadPathData = async () => {
       try {
         if (!slug) {
-          setError("No path slug provided");
+          setError("No path identifier provided");
           setLoading(false);
           return;
         }
         
-        // Find path by matching slug generated from title
-        const matchingPath = learningPaths.find(path => {
-            const generatedSlug = generateSlug(path.title);
-            return generatedSlug === slug;
-        });
+        let matchingPath = learningPaths.find(path => path.generatedSlug === slug); 
+        
+        if (!matchingPath) {
+          matchingPath = learningPaths.find(path => path.id === slug);
+        }
+        
+        if (!matchingPath) {
+          console.log('Path not found in context, fetching by ID:', slug);
+          const response = await iqaiCurriculumService.getLearningPathById(slug);
+          
+          if (response.success && response.learningPath) {
+            matchingPath = {
+              id: response.learningPath.id,
+              title: response.learningPath.title,
+              description: response.learningPath.description,
+              progress: 0,
+              totalModules: response.learningPath.curriculum?.modules?.length || 0,
+              completedModules: 0,
+              difficulty: response.learningPath.difficulty || 'Beginner',
+              estimatedTime: response.learningPath.totalDuration || '0 hours',
+              category: response.learningPath.domain || 'General',
+              status: response.learningPath.status || 'not_started',
+              rating: 0,
+              enrollments: 1,
+              color: '#3B82F6',
+              tags: response.learningPath.tags || [],
+              lastAccessed: 'Never',
+              createdAt: response.learningPath.createdAt || new Date().toISOString(),
+              generatedPath: response.learningPath.curriculum,
+              generatedSlug: response.learningPath.generatedSlug || slug
+            };
+          }
+        }
+        
+        if (!matchingPath) {
+          setError(`Learning path not found for identifier: ${slug}`);
+          setLoading(false);
+          return;
+        }
+        
+
         
         if (!matchingPath) {
             console.error('❌ No matching path found!');
             console.log('Looking for slug:', slug);
-            console.log('Available paths:', learningPaths.map(p => ({
-                id: p.id,
-                title: p.title,
-                generatedSlug: generateSlug(p.title)
+            console.log('Available paths:', learningPaths.map(path => ({
+                id: path.id,
+                title: path.title,
+                generatedSlug: path.generatedSlug
             })));
             setError(`Learning path not found for slug: ${slug}`);
-            setLoading(false);
-            return;
-        }
-        
-        if (!matchingPath) {
-            console.error('❌ No matching path found!');
-            console.log('Available IDs:', learningPaths.map(p => p.id));
-            setError(`Learning path not found. Available paths: ${learningPaths.length}`);
             setLoading(false);
             return;
         }
@@ -241,11 +268,35 @@ export default function PathDetail() {
   const handleStatusChange = (sectionId: string, itemId: string, newStatus: string) => {
     if (!pathData || !slug) return;
 
+    // const matchingPath = learningPaths.find(path => {
+    //   const generatedSlug = generateSlug(path.title);
+    //   return generatedSlug === slug;
+    // });
     const matchingPath = learningPaths.find(path => {
-      const generatedSlug = generateSlug(path.title);
-      return generatedSlug === slug;
+        return path.generatedSlug === slug;
     });
   
+    if (!matchingPath) {
+        console.error('❌ No matching path found!');
+        console.log('Looking for slug:', slug);
+        console.log('Available paths:', learningPaths.map(path => ({
+            id: path.id,
+            title: path.title,
+            generatedSlug: path.generatedSlug
+        })));
+        setError(`Learning path not found for slug: ${slug}`);
+        setLoading(false);
+        return;
+    }
+
+    console.log('✅ Found matching path:', {
+      id: matchingPath.id,
+      title: matchingPath.title,
+      hasGeneratedPath: !!matchingPath.generatedPath,
+      generatedPathType: typeof matchingPath.generatedPath
+    });
+
+
     if (matchingPath) {
       const pathSlug = slug;
       updateItemStatus(matchingPath.id, pathSlug, itemId, newStatus);

@@ -1,0 +1,770 @@
+{
+  "success": true,
+  "count": 3,
+  "totalStored": 3,
+  "paths": [
+    {
+      "id": "nextjs-server-actions-path-1756025159526",
+      "title": "Mastering Next.js with Server Actions",
+      "description": "A comprehensive learning path designed for intermediate Next.js developers to deeply understand, implement, and confidently leverage Server Actions for efficient server interactions and data mutations within the App Router.",
+      "difficulty": "intermediate",
+      "totalDuration": "20 hours",
+      "moduleCount": 4,
+      "createdAt": "2025-08-24T08:46:35.430Z",
+      "domain": "Frontend Development",
+      "tags": [
+        "Frontend Development"
+      ],
+      "status": "not_started",
+      "curriculum": {
+        "id": "nextjs-server-actions-path-1756025159526",
+        "title": "Mastering Next.js with Server Actions",
+        "description": "A comprehensive learning path designed for intermediate Next.js developers to deeply understand, implement, and confidently leverage Server Actions for efficient server interactions and data mutations within the App Router.",
+        "totalDuration": "20 hours",
+        "difficulty": "intermediate",
+        "modules": [
+          {
+            "id": "module-1",
+            "title": "App Router Fundamentals & Server/Client Components Refresher",
+            "description": "Revisit and solidify understanding of the Next.js App Router, the rendering model (Server vs. Client Components), and foundational data fetching patterns. This module ensures a strong base before diving into Server Actions.",
+            "duration": "4 hours",
+            "difficulty": "intermediate",
+            "competencies": [
+              "App Router architecture comprehension",
+              "Server/Client Components differentiation and usage",
+              "Basic data fetching strategies in Next.js"
+            ],
+            "resources": [
+              {
+                "type": "article",
+                "title": "Next.js Documentation: App Router Overview",
+                "url": "https://nextjs.org/docs/app-router",
+                "estimatedTime": "1 hour"
+              },
+              {
+                "type": "article",
+                "title": "Next.js Documentation: Server Components",
+                "url": "https://nextjs.org/docs/app/building-your-application/rendering/server-components",
+                "estimatedTime": "1 hour"
+              },
+              {
+                "type": "article",
+                "title": "Next.js Documentation: Data Fetching Basics",
+                "url": "https://nextjs.org/docs/app/building-your-application/data-fetching/fetching",
+                "estimatedTime": "1 hour"
+              },
+              {
+                "type": "exercise",
+                "title": "Set up a Basic App Router Page with Server-side Data",
+                "estimatedTime": "1 hour"
+              }
+            ],
+            "assessments": [
+              {
+                "type": "quiz",
+                "title": "App Router & Rendering Models Check",
+                "description": "A short quiz to confirm understanding of App Router navigation, Server/Client component roles, and data fetching concepts."
+              }
+            ]
+          },
+          {
+            "id": "module-2",
+            "title": "Introduction to Server Actions: Basics & First Steps",
+            "description": "Learn the core concepts of Server Actions, including their definition, invocation, and how they simplify data mutations and server-side logic execution directly from React components.",
+            "duration": "5 hours",
+            "difficulty": "intermediate",
+            "competencies": [
+              "Defining and invoking Server Actions",
+              "Understanding Server Actions' role in data mutations",
+              "Basic form submission using Server Actions"
+            ],
+            "resources": [
+              {
+                "type": "article",
+                "title": "Next.js Documentation: Server Actions and Mutations",
+                "url": "https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions",
+                "estimatedTime": "2 hours"
+              },
+              {
+                "type": "video",
+                "title": "Next.js Server Actions Tutorial",
+                "url": "https://www.youtube.com/watch?v=k_lU3yWfS20",
+                "estimatedTime": "1 hour"
+              },
+              {
+                "type": "exercise",
+                "title": "Build a Simple 'Add Task' Form with Server Actions",
+                "estimatedTime": "2 hours"
+              }
+            ],
+            "assessments": [
+              {
+                "type": "project",
+                "title": "Server Action for Data Creation",
+                "description": "Develop a simple page that allows adding an item (e.g., a guestbook entry or a product name) to a mock data store using a Server Action. Display the result or a confirmation message."
+              }
+            ]
+          },
+          {
+            "id": "module-3",
+            "title": "Advanced Server Actions: State Management, Revalidation & Error Handling",
+            "description": "Explore more advanced patterns, including managing loading states, handling errors gracefully, revalidating cached data after mutations, and integrating Server Actions effectively with client-side UI.",
+            "duration": "6 hours",
+            "difficulty": "intermediate",
+            "competencies": [
+              "Implementing loading states with `useFormStatus`",
+              "Robust error handling in Server Actions",
+              "Revalidating cached data using `revalidatePath` and `revalidateTag`",
+              "Combining Client Components with Server Actions for interactive UIs"
+            ],
+            "resources": [
+              {
+                "type": "article",
+                "title": "Next.js Documentation: Pending UI with `useFormStatus`",
+                "url": "https://nextjs.org/docs/app/api-reference/functions/use-form-status",
+                "estimatedTime": "1 hour"
+              },
+              {
+                "type": "article",
+                "title": "Next.js Documentation: Error Handling in Server Actions",
+                "url": "https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations#error-handling",
+                "estimatedTime": "1.5 hours"
+              },
+              {
+                "type": "article",
+                "title": "Next.js Documentation: Revalidating Data",
+                "url": "https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations#revalidating-data",
+                "estimatedTime": "1.5 hours"
+              },
+              {
+                "type": "exercise",
+                "title": "Build an Interactive To-Do List with Server Actions",
+                "estimatedTime": "2 hours"
+              }
+            ],
+            "assessments": [
+              {
+                "type": "project",
+                "title": "CRUD Feature with Full UI Feedback",
+                "description": "Develop a feature (e.g., a simple comment system for a blog post) that allows users to create, update, and delete comments using Server Actions. Implement loading states, display relevant error messages, and ensure the UI updates instantly after successful actions via data revalidation."
+              }
+            ]
+          },
+          {
+            "id": "module-4",
+            "title": "Server Actions: Security, Validation & Real-world Integration",
+            "description": "Focus on critical aspects for production-ready applications, including data validation, security considerations, and integrating Server Actions with a backend database using an ORM.",
+            "duration": "5 hours",
+            "difficulty": "intermediate",
+            "competencies": [
+              "Implementing robust data validation (e.g., with Zod)",
+              "Understanding and mitigating security risks (e.g., CSRF protection)",
+              "Integrating Server Actions with database ORMs (e.g., Prisma)",
+              "Applying best practices for production deployments"
+            ],
+            "resources": [
+              {
+                "type": "article",
+                "title": "Vercel Blog: Server Actions Security Considerations",
+                "url": "https://vercel.com/blog/security-with-server-actions",
+                "estimatedTime": "1 hour"
+              },
+              {
+                "type": "article",
+                "title": "Zod Documentation: Schema Validation",
+                "url": "https://zod.dev/",
+                "estimatedTime": "1.5 hours"
+              },
+              {
+                "type": "article",
+                "title": "Next.js Documentation: Integrating with an ORM (e.g., Prisma)",
+                "url": "https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations#integrating-with-an-orm",
+                "estimatedTime": "1 hour"
+              },
+              {
+                "type": "exercise",
+                "title": "Secure Form with Server-side Validation & Database Persistence",
+                "estimatedTime": "1.5 hours"
+              }
+            ],
+            "assessments": [
+              {
+                "type": "project",
+                "title": "Final Mini-Project: Full-Stack Form Application",
+                "description": "Build a small, production-ready form-based application (e.g., a simple contact form, user settings editor) that uses Server Actions for data submission. It must include client-side and server-side validation (Zod), proper error handling, loading states, and persist data to a database. Focus on security and best practices."
+              }
+            ]
+          }
+        ],
+        "prerequisites": [
+          "Proficiency in JavaScript (ES6+ features)",
+          "Strong understanding of React concepts (components, hooks, state management, props)",
+          "Familiarity with Next.js fundamentals, especially the App Router's basic structure and file conventions",
+          "Basic knowledge of Node.js and package managers (npm/yarn)",
+          "Understanding of web development concepts like HTTP requests, forms, and client-server communication"
+        ],
+        "outcomes": [
+          "Confidently implement and manage Server Actions for various data mutation and server interaction scenarios.",
+          "Develop highly interactive and performant forms and UI elements using Server Actions with seamless user feedback.",
+          "Master advanced techniques like data revalidation, optimistic updates, and robust error handling within Server Actions.",
+          "Design and build secure Next.js applications by integrating Server Actions with data validation and database interactions.",
+          "Apply best practices to build scalable and maintainable Next.js applications leveraging the full power of Server Actions."
+        ]
+      }
+    },
+    {
+      "id": "ui-ux-fundamentals-advanced-path",
+      "title": "Advanced UI/UX Fundamentals Mastery Path",
+      "description": "A comprehensive 1-month roadmap designed for advanced learners to deepen their understanding and practical application of core UI/UX concepts, enhance problem-solving abilities, and prepare for complex design challenges. This path focuses on advanced methodologies, strategic thinking, and practical implementation.",
+      "difficulty": "advanced",
+      "totalDuration": "160 hours",
+      "moduleCount": 4,
+      "createdAt": "2025-08-24T06:57:40.851Z",
+      "domain": "UX/UI Design",
+      "tags": [
+        "UX/UI Design"
+      ],
+      "status": "not_started",
+      "curriculum": {
+        "id": "ui-ux-fundamentals-advanced-path",
+        "title": "Advanced UI/UX Fundamentals Mastery Path",
+        "description": "A comprehensive 1-month roadmap designed for advanced learners to deepen their understanding and practical application of core UI/UX concepts, enhance problem-solving abilities, and prepare for complex design challenges. This path focuses on advanced methodologies, strategic thinking, and practical implementation.",
+        "totalDuration": "160 hours",
+        "difficulty": "advanced",
+        "modules": [
+          {
+            "id": "module-1-advanced-research-strategy",
+            "title": "Module 1: Advanced UX Research & Strategic Insight",
+            "description": "Dive deep into sophisticated user research methodologies, data synthesis, and translating insights into strategic design decisions. This module covers complex information architecture and stakeholder communication.",
+            "duration": "40 hours",
+            "difficulty": "advanced",
+            "competencies": [
+              "Advanced User Research Methods (e.g., Ethnography, A/B testing, Eye-tracking basics)",
+              "Complex Information Architecture",
+              "Data Synthesis & Insight Generation",
+              "Strategic Design Thinking",
+              "Stakeholder Communication & Alignment"
+            ],
+            "resources": [
+              {
+                "type": "article",
+                "title": "When to Use Which User-Experience Research Methods",
+                "url": "https://www.nngroup.com/articles/which-ux-research-methods-to-use/",
+                "estimatedTime": "2 hours"
+              },
+              {
+                "type": "article",
+                "title": "Information Architecture: The Structure of Digital Products",
+                "url": "https://www.nngroup.com/articles/information-architecture/",
+                "estimatedTime": "3 hours"
+              },
+              {
+                "type": "article",
+                "title": "UX Strategy Guide: Creating a Sustainable Foundation for Design",
+                "url": "https://design.google/resources/ux-strategy-guide/",
+                "estimatedTime": "4 hours"
+              },
+              {
+                "type": "article",
+                "title": "Customer Journey Mapping 101",
+                "url": "https://www.nngroup.com/articles/customer-journey-mapping/",
+                "estimatedTime": "2 hours"
+              },
+              {
+                "type": "article",
+                "title": "Mental Models in UX",
+                "url": "https://www.nngroup.com/articles/mental-models/",
+                "estimatedTime": "2 hours"
+              },
+              {
+                "type": "exercise",
+                "title": "Advanced User Interview & Synthesization Practice",
+                "estimatedTime": "15 hours"
+              },
+              {
+                "type": "exercise",
+                "title": "Information Architecture Design for a Large-Scale Application",
+                "estimatedTime": "12 hours"
+              }
+            ],
+            "assessments": [
+              {
+                "type": "project",
+                "title": "Research & Strategy Brief",
+                "description": "Develop a comprehensive research and strategy brief for a chosen complex product, including research plan, persona synthesis, customer journey map, and key strategic recommendations based on simulated data or real-world observation."
+              }
+            ]
+          },
+          {
+            "id": "module-2-interaction-accessibility",
+            "title": "Module 2: Sophisticated Interaction Design & Accessibility",
+            "description": "Explore advanced interaction patterns, micro-interactions, and motion design. Master WCAG 2.1+ accessibility standards and apply them to multi-platform design challenges. Focus on high-fidelity prototyping of complex user flows.",
+            "duration": "40 hours",
+            "difficulty": "advanced",
+            "competencies": [
+              "Advanced Interaction Patterns & Micro-interactions",
+              "WCAG 2.1+ Accessibility Standards",
+              "Multi-Platform Design (Web, Mobile, Tablet)",
+              "Motion Design Principles",
+              "High-Fidelity Prototyping (Complex Flows)"
+            ],
+            "resources": [
+              {
+                "type": "article",
+                "title": "Web Content Accessibility Guidelines (WCAG) 2.1 Overview",
+                "url": "https://www.w3.org/WAI/WCAG21/Understanding/",
+                "estimatedTime": "6 hours"
+              },
+              {
+                "type": "article",
+                "title": "Material Design Guidelines: Motion",
+                "url": "https://m3.material.io/styles/motion/overview",
+                "estimatedTime": "3 hours"
+              },
+              {
+                "type": "article",
+                "title": "Apple Human Interface Guidelines: Animation and Haptics",
+                "url": "https://developer.apple.com/design/human-interface-guidelines/animation-and-haptics",
+                "estimatedTime": "3 hours"
+              },
+              {
+                "type": "article",
+                "title": "Advanced Prototyping Techniques in Figma",
+                "url": "https://help.figma.com/hc/en-us/articles/360040317373-Create-advanced-prototypes",
+                "estimatedTime": "4 hours"
+              },
+              {
+                "type": "article",
+                "title": "Inclusive Design for a Better User Experience",
+                "url": "https://design.google/resources/inclusive-design/",
+                "estimatedTime": "3 hours"
+              },
+              {
+                "type": "exercise",
+                "title": "Accessible Component Design Challenge",
+                "estimatedTime": "10 hours"
+              },
+              {
+                "type": "exercise",
+                "title": "High-Fidelity Prototype of a New Feature",
+                "estimatedTime": "11 hours"
+              }
+            ],
+            "assessments": [
+              {
+                "type": "project",
+                "title": "Accessible Interactive Prototype & Audit",
+                "description": "Design and prototype a multi-platform (web and mobile) feature focusing on complex interactions and full WCAG 2.1 AA compliance. Include an accessibility audit report of your own design."
+              }
+            ]
+          },
+          {
+            "id": "module-3-design-systems-visuals",
+            "title": "Module 3: Design Systems & Visual Craftsmanship",
+            "description": "Master the principles of creating and maintaining scalable design systems. Explore advanced visual design topics including typography, color theory, iconography, and branding integration for complex interfaces. Understand design hand-off processes.",
+            "duration": "40 hours",
+            "difficulty": "advanced",
+            "competencies": [
+              "Design System Principles & Implementation",
+              "Advanced Typography & Color Theory",
+              "Iconography & Illustration Best Practices",
+              "Branding Integration in UI",
+              "Responsive & Adaptive Design Strategies",
+              "Design Handoff & Collaboration"
+            ],
+            "resources": [
+              {
+                "type": "article",
+                "title": "What is a Design System?",
+                "url": "https://www.nngroup.com/articles/design-systems/",
+                "estimatedTime": "2 hours"
+              },
+              {
+                "type": "article",
+                "title": "Material Design Guidelines: Color",
+                "url": "https://m3.material.io/styles/color/overview",
+                "estimatedTime": "3 hours"
+              },
+              {
+                "type": "article",
+                "title": "Material Design Guidelines: Typography",
+                "url": "https://m3.material.io/styles/typography/overview",
+                "estimatedTime": "3 hours"
+              },
+              {
+                "type": "article",
+                "title": "Everything You Need To Know About Design Handoff",
+                "url": "https://blog.prototypr.io/everything-you-need-to-know-about-design-handoff-a6dd97a7a1ec",
+                "estimatedTime": "4 hours"
+              },
+              {
+                "type": "article",
+                "title": "Building a Design System in Figma",
+                "url": "https://help.figma.com/hc/en-us/articles/360039237233-Create-a-design-system",
+                "estimatedTime": "4 hours"
+              },
+              {
+                "type": "exercise",
+                "title": "Component Library Creation for a Design System",
+                "estimatedTime": "12 hours"
+              },
+              {
+                "type": "exercise",
+                "title": "Visual Design Audit and Refinement",
+                "estimatedTime": "12 hours"
+              }
+            ],
+            "assessments": [
+              {
+                "type": "project",
+                "title": "Mini Design System & Visual Redesign",
+                "description": "Create a foundational mini-design system (including style guide, core components, and guidelines) and use it to execute a comprehensive visual redesign of a selected complex application screen, demonstrating consistency and advanced visual craftsmanship."
+              }
+            ]
+          },
+          {
+            "id": "module-4-measurement-ethics-portfolio",
+            "title": "Module 4: UX Measurement, Ethics & Portfolio Refinement",
+            "description": "Learn to measure UX effectiveness through advanced usability testing and analytics interpretation. Explore UX writing for clarity and impact, and delve into design ethics and responsible AI/ML design. Culminate the path by refining a compelling portfolio piece.",
+            "duration": "40 hours",
+            "difficulty": "advanced",
+            "competencies": [
+              "Advanced Usability Testing & Metrics",
+              "UX Analytics Interpretation",
+              "A/B Testing Strategies",
+              "Advanced UX Writing & Content Strategy",
+              "Design Ethics & Responsible AI/ML Design",
+              "Portfolio Storytelling & Presentation"
+            ],
+            "resources": [
+              {
+                "type": "article",
+                "title": "How to Measure UX: A Complete Guide",
+                "url": "https://www.nngroup.com/articles/how-to-measure-ux/",
+                "estimatedTime": "4 hours"
+              },
+              {
+                "type": "article",
+                "title": "UX Writing: How to Do It Like a Pro",
+                "url": "https://www.nngroup.com/articles/ux-writing/",
+                "estimatedTime": "3 hours"
+              },
+              {
+                "type": "article",
+                "title": "Designing for AI: The UX of Machine Learning",
+                "url": "https://design.google/resources/designing-for-ai/",
+                "estimatedTime": "4 hours"
+              },
+              {
+                "type": "article",
+                "title": "Ethical Design: A Guide to Responsible UX",
+                "url": "https://www.nngroup.com/articles/ethical-design/",
+                "estimatedTime": "3 hours"
+              },
+              {
+                "type": "article",
+                "title": "A Complete Guide to A/B Testing",
+                "url": "https://www.optimizely.com/optimization-glossary/ab-testing/",
+                "estimatedTime": "3 hours"
+              },
+              {
+                "type": "exercise",
+                "title": "Usability Test Planning & Analysis",
+                "estimatedTime": "12 hours"
+              },
+              {
+                "type": "exercise",
+                "title": "UX Writing Challenge: Microcopy Refinement",
+                "estimatedTime": "7 hours"
+              }
+            ],
+            "assessments": [
+              {
+                "type": "project",
+                "title": "Capstone Project & Portfolio Case Study",
+                "description": "Select a project (from this path or a new mini-project) and develop a professional, in-depth portfolio case study. Include problem definition, research, design process, iterations, outcomes, and reflections on ethical considerations and metrics. Prepare to present your work."
+              }
+            ]
+          }
+        ],
+        "prerequisites": [
+          "Intermediate understanding of UI/UX principles (e.g., basic user research, wireframing, prototyping)",
+          "Familiarity with at least one design tool (e.g., Figma, Adobe XD, Sketch)",
+          "Basic knowledge of design thinking methodology"
+        ],
+        "outcomes": [
+          "Master advanced UI/UX core concepts and methodologies.",
+          "Apply practical, high-level skills in user research, interaction design, and visual design systems.",
+          "Demonstrate advanced problem-solving abilities through complex design challenges.",
+          "Conduct and analyze sophisticated usability testing and interpret UX analytics.",
+          "Understand and apply principles of design ethics and accessibility.",
+          "Create a compelling, professional-grade UI/UX portfolio case study."
+        ]
+      }
+    },
+    {
+      "id": "go-fundamentals-path-learner-1756018526947",
+      "title": "Go Fundamentals: A Rapid Skill-Up for Intermediate Developers",
+      "description": "A comprehensive 2-week learning path designed for intermediate developers to quickly master the fundamental concepts, practical applications, and problem-solving techniques in the Go programming language, targeting a total of 40 hours of focused study.",
+      "difficulty": "intermediate",
+      "totalDuration": "40 hours",
+      "moduleCount": 5,
+      "createdAt": "2025-08-24T06:56:02.909Z",
+      "domain": "Backend Development",
+      "tags": [
+        "Backend Development"
+      ],
+      "status": "not_started",
+      "curriculum": {
+        "id": "go-fundamentals-path-learner-1756018526947",
+        "title": "Go Fundamentals: A Rapid Skill-Up for Intermediate Developers",
+        "description": "A comprehensive 2-week learning path designed for intermediate developers to quickly master the fundamental concepts, practical applications, and problem-solving techniques in the Go programming language, targeting a total of 40 hours of focused study.",
+        "totalDuration": "40 hours",
+        "difficulty": "intermediate",
+        "modules": [
+          {
+            "id": "module-1",
+            "title": "Getting Started with Go Basics",
+            "description": "Establish a strong foundation in Go by covering environment setup, basic syntax, variables, data types, and fundamental control flow structures.",
+            "duration": "6 hours",
+            "difficulty": "intermediate",
+            "competencies": [
+              "Go environment setup",
+              "Basic Go syntax",
+              "Understanding Go data types",
+              "Implementing control flow (if/else, switch, for)",
+              "Defining and calling functions"
+            ],
+            "resources": [
+              {
+                "type": "exercise",
+                "title": "The Go Tour: A Tour of Go - Welcome & Basics",
+                "url": "https://go.dev/tour/welcome/1",
+                "estimatedTime": "2 hours"
+              },
+              {
+                "type": "article",
+                "title": "Go by Example: Hello World, Values, Variables, For, If/Else, Functions",
+                "url": "https://gobyexample.com/",
+                "estimatedTime": "2 hours"
+              },
+              {
+                "type": "article",
+                "title": "Official Go Documentation: How to Write Go Code (First steps)",
+                "url": "https://go.dev/doc/code",
+                "estimatedTime": "1 hour"
+              }
+            ],
+            "assessments": [
+              {
+                "type": "quiz",
+                "title": "Go Basics Quiz",
+                "description": "A multiple-choice quiz covering Go syntax, data types, and control flow."
+              },
+              {
+                "type": "assignment",
+                "title": "Simple Calculator Program",
+                "description": "Write a Go program that takes two numbers and an operator, then performs the corresponding arithmetic operation using basic Go constructs."
+              }
+            ]
+          },
+          {
+            "id": "module-2",
+            "title": "Structs, Methods, and Interfaces",
+            "description": "Dive into Go's object-oriented paradigms using structs to define custom data types, methods to associate behaviors, and interfaces for abstraction.",
+            "duration": "8 hours",
+            "difficulty": "intermediate",
+            "competencies": [
+              "Defining and using structs",
+              "Attaching methods to structs",
+              "Understanding and implementing Go interfaces",
+              "Basic error handling patterns in Go"
+            ],
+            "resources": [
+              {
+                "type": "exercise",
+                "title": "The Go Tour: Structs, Methods, and Interfaces",
+                "url": "https://go.dev/tour/methods/1",
+                "estimatedTime": "3 hours"
+              },
+              {
+                "type": "article",
+                "title": "Go by Example: Structs, Methods, Interfaces, Errors",
+                "url": "https://gobyexample.com/",
+                "estimatedTime": "2 hours"
+              },
+              {
+                "type": "article",
+                "title": "Official Go Blog: Error Handling in Go",
+                "url": "https://go.dev/blog/error-handling-and-go",
+                "estimatedTime": "1 hour"
+              },
+              {
+                "type": "article",
+                "title": "Effective Go: Interfaces and other types",
+                "url": "https://go.dev/doc/effective_go#interfaces",
+                "estimatedTime": "1 hour"
+              }
+            ],
+            "assessments": [
+              {
+                "type": "project",
+                "title": "Shape Area Calculator",
+                "description": "Design structs for different geometric shapes (e.g., Circle, Rectangle) and implement an interface (e.g., 'Shape') with an 'Area()' method."
+              }
+            ]
+          },
+          {
+            "id": "module-3",
+            "title": "Pointers, Slices, and Maps for Data Management",
+            "description": "Master Go's fundamental data structures: understanding pointers for memory management, and efficiently using dynamic slices and key-value maps.",
+            "duration": "8 hours",
+            "difficulty": "intermediate",
+            "competencies": [
+              "Understanding and using pointers",
+              "Distinguishing between arrays and slices",
+              "Effective use of slices (creation, appending, slicing)",
+              "Working with maps for key-value storage"
+            ],
+            "resources": [
+              {
+                "type": "exercise",
+                "title": "The Go Tour: Pointers, Arrays, Slices, and Maps",
+                "url": "https://go.dev/tour/moretypes/1",
+                "estimatedTime": "3 hours"
+              },
+              {
+                "type": "article",
+                "title": "Go by Example: Pointers, Arrays, Slices, Maps",
+                "url": "https://gobyexample.com/",
+                "estimatedTime": "2 hours"
+              },
+              {
+                "type": "article",
+                "title": "Effective Go: Slices",
+                "url": "https://go.dev/doc/effective_go#slices",
+                "estimatedTime": "1 hour"
+              },
+              {
+                "type": "article",
+                "title": "Go Blog: The Laws of Reflection - Slices",
+                "url": "https://go.dev/blog/laws-of-reflection",
+                "estimatedTime": "1 hour"
+              }
+            ],
+            "assessments": [
+              {
+                "type": "assignment",
+                "title": "Word Frequency Counter",
+                "description": "Write a Go program that reads a block of text, counts the frequency of each word, and stores the results in a map. Use slices for any intermediate processing."
+              }
+            ]
+          },
+          {
+            "id": "module-4",
+            "title": "Concurrency with Goroutines and Channels",
+            "description": "Explore Go's powerful concurrency model by learning to use goroutines for parallel execution and channels for safe communication between concurrent processes.",
+            "duration": "10 hours",
+            "difficulty": "intermediate",
+            "competencies": [
+              "Launching and managing goroutines",
+              "Using channels for communication",
+              "Implementing select statements for multiple channels",
+              "Basic understanding of `sync` package (Mutex, WaitGroup)"
+            ],
+            "resources": [
+              {
+                "type": "exercise",
+                "title": "The Go Tour: Concurrency",
+                "url": "https://go.dev/tour/concurrency/1",
+                "estimatedTime": "3 hours"
+              },
+              {
+                "type": "article",
+                "title": "Go by Example: Goroutines, Channels, Select, Worker Pools",
+                "url": "https://gobyexample.com/",
+                "estimatedTime": "3 hours"
+              },
+              {
+                "type": "article",
+                "title": "Official Go Blog: Share Memory By Communicating",
+                "url": "https://go.dev/blog/share-memory-by-communicating",
+                "estimatedTime": "1.5 hours"
+              },
+              {
+                "type": "video",
+                "title": "Concurrency Is Not Parallelism (Rob Pike)",
+                "estimatedTime": "1 hour"
+              }
+            ],
+            "assessments": [
+              {
+                "type": "project",
+                "title": "Concurrent Web Scraper (Limited)",
+                "description": "Develop a simple Go program that concurrently fetches a list of URLs (e.g., 5-10 URLs) and prints their HTTP status codes, using goroutines and channels to limit concurrency."
+              }
+            ]
+          },
+          {
+            "id": "module-5",
+            "title": "Packages, Modules, and Go Tooling",
+            "description": "Learn to structure, manage, and test your Go projects using packages for code organization, Go Modules for dependency management, and the built-in Go tooling.",
+            "duration": "8 hours",
+            "difficulty": "intermediate",
+            "competencies": [
+              "Organizing code into packages",
+              "Creating and using Go modules for dependency management",
+              "Writing basic unit tests in Go",
+              "Utilizing Go command-line tools (go run, go build, go fmt, go vet)"
+            ],
+            "resources": [
+              {
+                "type": "article",
+                "title": "Official Go Documentation: Packages",
+                "url": "https://go.dev/doc/effective_go#packages",
+                "estimatedTime": "1 hour"
+              },
+              {
+                "type": "article",
+                "title": "Official Go Documentation: Go Modules Reference",
+                "url": "https://go.dev/ref/mod",
+                "estimatedTime": "2 hours"
+              },
+              {
+                "type": "article",
+                "title": "Go by Example: Package-level operations, Testing",
+                "url": "https://gobyexample.com/",
+                "estimatedTime": "2 hours"
+              },
+              {
+                "type": "article",
+                "title": "Official Go Blog: Go Modules: An Unofficial Guide (Parts 1 & 2)",
+                "url": "https://go.dev/blog/go-modules-part1",
+                "estimatedTime": "2 hours"
+              }
+            ],
+            "assessments": [
+              {
+                "type": "project",
+                "title": "Multi-Package CLI Utility with Tests",
+                "description": "Create a small command-line utility (e.g., a simple task list manager) structured into multiple packages with appropriate Go module setup and basic unit tests for key functionalities."
+              }
+            ]
+          }
+        ],
+        "prerequisites": [
+          "Basic programming concepts (variables, loops, functions) in any language",
+          "Familiarity with command-line interface and basic terminal commands"
+        ],
+        "outcomes": [
+          "Proficiency in Go's core syntax, data structures, and control flow.",
+          "Ability to design and implement custom types using structs, methods, and interfaces.",
+          "Understanding and basic application of Go's concurrency model (goroutines and channels).",
+          "Skills to effectively organize Go code into packages and manage dependencies with Go Modules.",
+          "Competence in writing basic unit tests and utilizing essential Go command-line tools.",
+          "Confidence to tackle more advanced Go topics and contribute to Go projects."
+        ]
+      }
+    }
+  ]
+}

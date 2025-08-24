@@ -71,6 +71,10 @@ interface LearningPath {
     color: string
     tags: string[]
     lastAccessed: string
+    startedAt?: string
+    completedAt?: string
+    updatedAt?: string
+    generatedSlug?: string 
 }
 
 interface EditFormData {
@@ -131,6 +135,7 @@ export default function LearningPaths() {
                 await iqaiCurriculumService.getStoredLearningPaths()
 
             if (response && response.paths) {
+                // In the loadLearningPaths function, map the server response properly
                 const formattedPaths = response.paths.map((path) => ({
                     id: path.id,
                     title: path.title,
@@ -141,9 +146,7 @@ export default function LearningPaths() {
                     lessons: path.curriculum?.modules?.length || 0,
                     tags: path.curriculum?.tags || [],
                     status: path.status || 'not_started',
-                    progress: 0,
-                    // rating: 4.5, // Default rating
-                    // author: 'AI Generated',
+                    progress: path.progress || 0,
                     thumbnail: '/placeholder.svg',
                     learningOutcomes: path.curriculum?.objectives || [],
                     startedDate: path.created_at
@@ -153,7 +156,9 @@ export default function LearningPaths() {
                         ? new Date(path.updated_at)
                         : null,
                     curriculum: path.curriculum,
+                    generatedSlug: path.generatedSlug,
                 }))
+                console.log("formattedPaths", formattedPaths)
                 setLearningPaths(formattedPaths)
             } else {
                 setLearningPaths([])
@@ -171,6 +176,8 @@ export default function LearningPaths() {
             setIsLoading(false)
         }
     }
+
+    
 
     const calculateDuration = (curriculum) => {
         if (!curriculum?.modules) return '2-3 hours'
@@ -302,7 +309,17 @@ export default function LearningPaths() {
     }
 
     const getActionButton = (path: LearningPath) => {
-        const pathSlug = generateSlug(path.title);
+        // Use the generatedSlug from the path data instead of generating it
+         const pathSlug = path.generatedSlug
+        console.log("pathSlug", pathSlug)
+
+        console.log('=== Path Link Generation Debug ===');
+        console.log('Path ID:', path.id);
+        console.log('Path Title:', path.title);
+        console.log('Generated Slug:', path.generatedSlug);
+        console.log('Path Status:', path.status);
+        console.log('Full Link URL:', `/dashboard/paths/${pathSlug}`);
+        console.log('=====================================');
         switch (path.status) {
             case 'completed':
                 return (
@@ -631,13 +648,17 @@ export default function LearningPaths() {
                                         />
                                         <div className='flex items-center justify-between text-xs text-muted-foreground'>
                                             <span>
-                                                0/{path.lessons} modules
+                                                {path.completedItems || 0}/{path.lessons} modules
                                             </span>
                                             <span>
-                                                Last accessed:{' '}
-                                                {path.lastAccessed
-                                                    ? path.lastAccessed.toLocaleString()
-                                                    : 'Never'}
+                                                {path.status === 'completed' && path.completedAt 
+                                                    ? `Completed: ${new Date(path.completedAt).toLocaleDateString()}`
+                                                    : path.status === 'active' && path.startedAt
+                                                    ? `Started: ${new Date(path.startedAt).toLocaleDateString()}`
+                                                    : path.lastAccessed
+                                                    ? `Last accessed: ${path.lastAccessed.toLocaleString()}`
+                                                    : 'Never accessed'
+                                                }
                                             </span>
                                         </div>
                                     </div>

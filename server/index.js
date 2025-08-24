@@ -6,6 +6,15 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { createLearningPathStorageAgent } from './learningPathStorage.js'
 
+const generateSlug = (title) => {
+  return title
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '') 
+    .replace(/[\s_-]+/g, '-') 
+    .replace(/^-+|-+$/g, ''); 
+};
+
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
@@ -35,61 +44,62 @@ app.post('/generate-learning-path', async (req, res) => {
 
         const instruction = `You are an expert curriculum designer AI that creates personalized learning paths.
 
-Please create a comprehensive learning path JSON object based on the following information:
+            Please create a comprehensive learning path JSON object based on the following information:
 
-LEARNER PROFILE:
-${JSON.stringify(learnerProfile, null, 2)}
+            LEARNER PROFILE:
+            ${JSON.stringify(learnerProfile, null, 2)}
 
-LEARNING GOALS:
-${JSON.stringify(goals, null, 2)}
+            LEARNING GOALS:
+            ${JSON.stringify(goals, null, 2)}
 
-TIME CONSTRAINTS:
-${JSON.stringify(timeConstraints, null, 2)}
+            TIME CONSTRAINTS:
+            ${JSON.stringify(timeConstraints, null, 2)}
 
-Instructions:
-1. Analyze the learner's profile, goals, and time constraints
-2. Create a detailed learning path with modules, resources, and assessments
-3. For resources, ONLY include well-known, freely available resources with real URLs that exist online
-4. Do NOT invent or hallucinate URLs - if you don't know a specific real URL, omit the "url" field entirely
-5. Focus on reputable sources like official documentation, established educational platforms, and widely-known resources
-6. Return ONLY a valid JSON object with the following structure:
-{
-  "id": "unique_path_id",
-  "title": "Learning Path Title",
-  "description": "Path description",
-  "totalDuration": "estimated total time",
-  "difficulty": "beginner|intermediate|advanced",
-  "modules": [
-    {
-      "id": "module_id",
-      "title": "Module Title",
-      "description": "Module description",
-      "duration": "estimated time",
-      "difficulty": "beginner|intermediate|advanced",
-      "competencies": ["skill1", "skill2"],
-      "resources": [
-        {
-          "type": "video|article|exercise|project",
-          "title": "Resource Title",
-          "estimatedTime": "time estimate"
-        }
-      ],
-      "assessments": [
-        {
-          "type": "quiz|project|assignment",
-          "title": "Assessment Title",
-          "description": "Assessment description"
-        }
-      ]
-    }
-  ],
-  "prerequisites": ["prerequisite1", "prerequisite2"],
-  "outcomes": ["outcome1", "outcome2"]
-}
+            Instructions:
+            1. Analyze the learner's profile, goals, and time constraints
+            2. Create a detailed learning path with modules, resources, and assessments
+            3. For resources, ONLY include well-known, freely available resources with real URLs that exist online
+            4. Do NOT invent or hallucinate URLs - if you don't know a specific real URL, omit the "url" field entirely
+            5. Focus on reputable sources like official documentation, established educational platforms, and widely-known resources
+            6. Return ONLY a valid JSON object with the following structure:
+            {
+            "id": "unique_path_id",
+            "title": "Learning Path Title",
+            "description": "Path description",
+            "totalDuration": "estimated total time",
+            "difficulty": "beginner|intermediate|advanced",
+            "modules": [
+                {
+                "id": "module_id",
+                "title": "Module Title",
+                "description": "Module description",
+                "duration": "estimated time",
+                "difficulty": "beginner|intermediate|advanced",
+                "competencies": ["skill1", "skill2"],
+                "resources": [
+                    {
+                    "type": "video|article|exercise|project",
+                    "title": "Resource Title",
+                    "estimatedTime": "time estimate"
+                    }
+                ],
+                "assessments": [
+                    {
+                    "type": "quiz|project|assignment",
+                    "title": "Assessment Title",
+                    "description": "Assessment description"
+                    }
+                ]
+                }
+            ],
+            "prerequisites": ["prerequisite1", "prerequisite2"],
+            "outcomes": ["outcome1", "outcome2"]
+            }
 
-IMPORTANT: Only include resource URLs if you are absolutely certain they exist. When in doubt, omit the URL field. Focus on creating high-quality, realistic learning paths with genuine resource recommendations.
+            IMPORTANT: Only include resource URLs if you are absolutely certain they exist. When in doubt, omit the URL field. Focus on creating high-quality, realistic learning paths with genuine resource recommendations.
 
-Make sure the learning path is tailored to the specific learner profile and goals provided.`
+            Make sure the learning path is tailored to the specific learner profile and goals provided.
+        `
 
         console.log('Server: running agent with comprehensive instruction')
 
@@ -161,6 +171,7 @@ app.post('/save-learning-path', async (req, res) => {
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
                 status: 'not_started', 
+                generatedSlug: generateSlug(learningPath.title),
                 curriculum: learningPath,
                 ...metadata,
             }
@@ -192,8 +203,14 @@ app.post('/save-learning-path', async (req, res) => {
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
                 status: 'not_started',
+                generatedSlug: generateSlug,
                 curriculum: learningPath,
                 ...metadata,
+            }
+            console.log("pathRecord", pathRecord)
+
+             if (!pathRecord.id || !pathRecord.generatedSlug) {
+                throw new Error('Failed to generate path ID or slug');
             }
 
             global.learningPaths.push(pathRecord)
@@ -329,6 +346,7 @@ app.get('/learning-paths', async (req, res) => {
                 domain: path.domain,
                 tags: path.tags,
                 status: path.status,
+                generatedSlug: path.generatedSlug,
                 curriculum: path.curriculum, // Include full curriculum for frontend
             })),
         })
@@ -364,6 +382,101 @@ app.get('/resource-analytics', async (req, res) => {
         })
     } catch (err) {
         console.error('resource-analytics error:', err)
+        return res.status(500).json({ error: err?.message || String(err) })
+    }
+})
+
+// Update learning path status based on progress
+app.patch('/learning-path/:id/status', async (req, res) => {
+    try {
+        const { id } = req.params
+        const { progress, completedItems, totalItems, userId } = req.body || {}
+
+        if (progress === undefined) {
+            return res.status(400).json({ error: 'Progress data is required' })
+        }
+
+        console.log('Server: updating learning path status based on progress:', { id, progress, completedItems, totalItems })
+
+        // Determine status based on progress
+        let newStatus = 'not_started'
+        if (progress > 0 && progress < 100) {
+            newStatus = 'active'
+        } else if (progress === 100) {
+            newStatus = 'completed'
+        }
+
+        // Update the learning path status
+        try {
+            const { session } = await createLearningPathStorageAgent(userId)
+            const learningPaths = session?.state?.get('learning_paths') || []
+            const pathIndex = learningPaths.findIndex((p) => p.id === id)
+
+            if (pathIndex === -1) {
+                return res.status(404).json({
+                    success: false,
+                    message: `Learning path '${id}' not found`,
+                })
+            }
+
+            // Update the path with new status and progress info
+            learningPaths[pathIndex] = {
+                ...learningPaths[pathIndex],
+                status: newStatus,
+                progress: progress,
+                completedItems: completedItems || 0,
+                totalItems: totalItems || 0,
+                updatedAt: new Date().toISOString(),
+                ...(newStatus === 'completed' && { completedAt: new Date().toISOString() }),
+                ...(newStatus === 'active' && !learningPaths[pathIndex].startedAt && { startedAt: new Date().toISOString() })
+            }
+
+            session?.state?.set('learning_paths', learningPaths)
+
+            console.log(`Server: learning path status updated to '${newStatus}'`)
+
+            res.setHeader('Content-Type', 'application/json')
+            return res.status(200).json({
+                success: true,
+                pathId: id,
+                status: newStatus,
+                progress: progress,
+                message: `Learning path status updated to '${newStatus}'`,
+            })
+        } catch (directError) {
+            console.error('Direct storage error:', directError)
+            global.learningPaths = global.learningPaths || []
+            const pathIndex = global.learningPaths.findIndex((p) => p.id === id)
+
+            if (pathIndex === -1) {
+                return res.status(404).json({
+                    success: false,
+                    message: `Learning path '${id}' not found`,
+                })
+            }
+
+            global.learningPaths[pathIndex] = {
+                ...global.learningPaths[pathIndex],
+                status: newStatus,
+                progress: progress,
+                completedItems: completedItems || 0,
+                totalItems: totalItems || 0,
+                updatedAt: new Date().toISOString(),
+                ...(newStatus === 'completed' && { completedAt: new Date().toISOString() }),
+                ...(newStatus === 'active' && !global.learningPaths[pathIndex].startedAt && { startedAt: new Date().toISOString() })
+            }
+
+            res.setHeader('Content-Type', 'application/json')
+            return res.status(200).json({
+                success: true,
+                pathId: id,
+                status: newStatus,
+                progress: progress,
+                message: `Learning path status updated to '${newStatus}' (fallback)`,
+            })
+        }
+    } catch (err) {
+        console.error('update-learning-path-status error:', err)
         return res.status(500).json({ error: err?.message || String(err) })
     }
 })

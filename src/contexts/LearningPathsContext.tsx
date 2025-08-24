@@ -20,6 +20,7 @@ interface LearningPath {
   lastAccessed: string;
   createdAt: string;
   generatedPath?: GeneratedLearningPath;
+  generatedSlug?: string;
 }
 
 interface LearningPathsContextType {

@@ -92,7 +92,13 @@ const saveLearningPathTool = createTool({
                 moduleCount: learningPath.modules?.length || 0,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
-                status: "not_started",
+                status: "not_started", 
+                generatedSlug: generateSlug(learningPath.title),
+                progress: 0,
+                completedItems: 0, 
+                totalItems: learningPath.modules?.reduce((total, module) => {
+                    return total + (module.resources?.length || 0) + (module.assessments?.length || 0);
+                }, 0) || 0, 
                 ...metadata,
             }
 

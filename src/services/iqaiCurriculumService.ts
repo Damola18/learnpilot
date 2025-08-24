@@ -697,6 +697,9 @@ class IQAICurriculumService {
                 queryParams.toString() ? `?${queryParams.toString()}` : ''
             }`
 
+            console.log('=== Service Debug: Request URL ===');
+            console.log('URL:', url);
+            
             const response = await fetch(url, {
                 method: 'GET',
                 headers: {
@@ -704,11 +707,29 @@ class IQAICurriculumService {
                 },
             })
 
+            console.log('=== Service Debug: Response Status ===');
+            console.log('Status:', response.status);
+            console.log('OK:', response.ok);
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`)
             }
 
             const data = await response.json()
+            
+            console.log('=== Service Debug: Raw Server Response ===');
+            console.log('Full response:', JSON.stringify(data, null, 2));
+            console.log('Success:', data.success);
+            console.log('Paths count:', data.paths?.length);
+            
+            if (data.paths && data.paths.length > 0) {
+                console.log('=== Service Debug: First Path Analysis ===');
+                const firstPath = data.paths[0];
+                console.log('First path ID:', firstPath.id, 'Type:', typeof firstPath.id);
+                console.log('First path title:', firstPath.title);
+                console.log('First path generatedSlug:', firstPath.generatedSlug);
+                console.log('First path keys:', Object.keys(firstPath));
+            }
 
             if (data.success) {
                 console.log(
