@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLearningPaths } from "@/contexts/LearningPathsContext";
 
 const mockLearningPaths = [
   {
@@ -67,30 +68,34 @@ const mockAchievements = [
   { name: "Master Mind", icon: Brain, unlocked: false },
 ];
 
-const mockRecentActivity = [
-  {
-    type: "completed",
-    title: "React Hooks Deep Dive",
-    time: "2 hours ago",
-    path: "React Advanced Concepts",
-  },
-  {
-    type: "started",
-    title: "Linear Regression Basics",
-    time: "1 day ago",
-    path: "Machine Learning Fundamentals",
-  },
-  {
-    type: "achievement",
-    title: "Earned Week Warrior badge",
-    time: "2 days ago",
-    path: null,
-  },
-];
+// const mockRecentActivity = [
+//   {
+//     type: "completed",
+//     title: "React Hooks Deep Dive",
+//     time: "2 hours ago",
+//     path: "React Advanced Concepts",
+//   },
+//   {
+//     type: "started",
+//     title: "Linear Regression Basics",
+//     time: "1 day ago",
+//     path: "Machine Learning Fundamentals",
+//   },
+//   {
+//     type: "achievement",
+//     title: "Earned Week Warrior badge",
+//     time: "2 days ago",
+//     path: null,
+//   },
+// ];
 
 export default function Dashboard() {
   const [currentTime] = useState(new Date());
   const { user } = useAuth();
+  const {
+    paths,
+    getCompletedPaths,
+  } = useLearningPaths()
   const greeting =
     currentTime.getHours() < 12
       ? "Good morning"
@@ -143,36 +148,36 @@ export default function Dashboard() {
 
           <Card className="border-0 shadow-card">
             <CardContent className="p-6 rounded-md border border--neutral-700">
-              <div className="flex items-center justify-between">
+              <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">This Week</p>
                   <p className="text-2xl font-bold text-foreground">12.5h</p>
                 </div>
-                <Clock className="w-8 h-8 text-green-400" />
+                <Clock className="w-6 h-6 text-slate-400" />
               </div>
             </CardContent>
           </Card>
 
           <Card className="border-0 shadow-card">
             <CardContent className="p-6 rounded-md border border--neutral-700">
-              <div className="flex items-center justify-between">
+              <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Completed Paths</p>
-                  <p className="text-2xl font-bold text-foreground">8</p>
+                  <p className="text-2xl font-bold text-foreground">{getCompletedPaths()}</p>
                 </div>
-                <BookOpen className="w-8 h-8 text-pink-400" />
+                <BookOpen className="w-6 h-6 text-slate-400" />
               </div>
             </CardContent>
           </Card>
 
           <Card className="border-0 shadow-card">
             <CardContent className="p-6 rounded-md border border--neutral-700">
-              <div className="flex items-center justify-between">
+              <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Skills Gained</p>
                   <p className="text-2xl font-bold text-foreground">24</p>
                 </div>
-                <TrendingUp className="w-8 h-8 text-yellow-400" />
+                <TrendingUp className="w-6 h-6 text-slate-400" />
               </div>
             </CardContent>
           </Card>
@@ -198,23 +203,23 @@ export default function Dashboard() {
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
-              {mockLearningPaths.map((path) => (
+              {paths ? paths.map((path) => (
                 <div
                   key={path.id}
                   className="p-4 rounded-lg border border-border bg-card hover:shadow-md transition-all duration-200 group"
                 >
-                  <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-start justify-between mb-6">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <div className={`w-3 h-3 rounded-full ${path.color}`} />
-                        <h3 className="font-semibold text-card-foreground group-hover:text-primary transition-colors">
+                        <h3 className="font-semibold text-xl text-card-foreground group-hover:text-primary transition-colors">
                           {path.title}
                         </h3>
                         <Badge variant="outline" className="text-xs">
                           {path.difficulty}
                         </Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-3">
+                      <p className="text-sm lg:text-base text-muted-foreground mb-3">
                         {path.description}
                       </p>
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
@@ -235,13 +240,27 @@ export default function Dashboard() {
                       <span className="text-muted-foreground">Progress</span>
                       <span className="font-medium">{path.progress}%</span>
                     </div>
-                    <Progress value={path.progress} className="h-2" />
+                    <Progress value={path.progress} className="h-3" />
                   </div>
                 </div>
-              ))}
+              )) : <div
+                className="p-4 rounded-lg border border-border bg-card hover:shadow-md transition-all duration-200 group"
+              >
+                <h3>You do not have any actve learning paths</h3>
+                <p>Create one now and start learning
+                </p>
+                <Button asChild size="lg" className="shadow-learning">
+                  <Link to="/dashboard/create-path">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create New Path
+                  </Link>
+                </Button>
+              </div>
+              }
             </CardContent>
           </Card>
           {/* Recent Activity */}
+          
         </div>
 
         {/* Sidebar */}
