@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bell, Search, User, Moon, Sun, Zap } from "lucide-react";
+import { Search, User, Moon, Sun, Zap } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,16 +11,42 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { generateAvatar } from "@/utils/generateAvatar";
 
 export function AppHeader() {
   const [isDark, setIsDark] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  
 
+ 
+
+  const getAvatarUrl = () => {
+    const metadata = user?.user_metadata || {};
+    if (metadata.avatarSeed) {
+      return generateAvatar(metadata.avatarSeed);
+    }
+    return null; 
+  };
+
+  const getUserInitials = () => {
+    const metadata = user?.user_metadata || {};
+    const firstName = metadata.firstName || metadata.name?.split(' ')[0] || '';
+    const lastName = metadata.lastName || metadata.name?.split(' ')[1] || '';
+    
+    if (firstName && lastName) {
+      return `${firstName[0]}${lastName[0]}`;
+    } else if (firstName) {
+      return firstName[0];
+    } else if (user?.email) {
+      return user.email[0].toUpperCase();
+    }
+    return 'U';
+  };
+  
   const toggleTheme = () => {
     setIsDark(!isDark);
     document.documentElement.classList.toggle("dark");
@@ -31,10 +57,15 @@ export function AppHeader() {
     navigate("/");
   };
 
+  const avatarUrl = getAvatarUrl();
+  const userInitials = getUserInitials();
+  const displayName = user?.user_metadata?.firstName && user?.user_metadata?.lastName 
+    ? `${user.user_metadata.firstName} ${user.user_metadata.lastName}`
+    : user?.user_metadata?.name || 'User';
+
   return (
     <header className="h-16 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="flex items-center justify-between px-6 h-full">
-
         <div className="flex items-center gap-4">
           <SidebarTrigger className="hover:bg-accent hover:text-accent-foreground" />
 
@@ -48,7 +79,6 @@ export function AppHeader() {
         </div>
 
         <div className="flex items-center gap-3">
-
           <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-warning-muted border border-warning/20">
             <Zap className="w-4 h-4 text-warning" />
             <span className="text-sm font-medium text-warning-foreground">
@@ -69,16 +99,16 @@ export function AppHeader() {
             )}
           </Button>
 
-
-
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                 <Avatar className="h-9 w-9">
-                  <AvatarImage src="/avatars/user.jpg" alt="@user" />
+                  {avatarUrl ? (
+                    <AvatarImage src={avatarUrl} alt="Profile Avatar" />
+                  ) : null}
                   <AvatarFallback className="bg-gradient-primary text-white">
-                    {user?.user_metadata?.name.split(' ').map(n => n[0]).join('')}
+                    {userInitials}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -86,19 +116,16 @@ export function AppHeader() {
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{user?.user_metadata?.name}</p>
+                  <p className="text-sm font-medium leading-none">{displayName}</p>
                   <p className="text-xs leading-none text-muted-foreground">
                     {user?.email}
                   </p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/dashboard/settings')}>
                 <User className="mr-2 h-4 w-4" />
-                <span>Profile</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <span>Settings</span>
+                <span>Profile Settings</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleSignOut}>
