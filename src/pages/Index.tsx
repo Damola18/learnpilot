@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Brain, Target, Zap, BookOpen, Users, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Index() {
+  const { user } = useAuth();
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -23,16 +25,21 @@ export default function Index() {
           </nav>
 
           <div className="flex items-center gap-4">
-            <Link to="/login">
-              <Button variant="outline" size="sm" className="hidden md:flex">
-                Sign In
-              </Button>
-            </Link>
-            <Link to="/login">
-              <Button className="bg-gradient-primary text-white">
-                Get Started
-              </Button>
-            </Link>
+            {user ?
+              <Link to="/dashboard">
+                <Button className="bg-gradient-primary text-white">
+                  Go to Dashboard
+                </Button>
+              </Link> : <><Link to="/login">
+                <Button variant="outline" size="sm" className="hidden md:flex">
+                  Sign In
+                </Button>
+              </Link>
+                <Link to="/login">
+                  <Button className="bg-gradient-primary text-white">
+                    Get Started
+                  </Button>
+                </Link></>}
           </div>
         </div>
       </header>
@@ -50,14 +57,21 @@ export default function Index() {
               Create Personalized Learning Journeys and Build Your Ultimate AI Learning Agent — Powered by Intelligence
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8">
-              <Link to="/login">
+              {user ? <Link to="/Dashboard">
+                <Button
+                  size="lg"
+                  className="bg-foreground text-background hover:bg-foreground/90 px-8 py-7 text-lg font-medium rounded-xl"
+                >
+                  Continue Learning <ArrowRight />
+                </Button>
+              </Link> : <Link to="/login">
                 <Button
                   size="lg"
                   className="bg-foreground text-background hover:bg-foreground/90 px-8 py-7 text-lg font-medium rounded-xl"
                 >
                   Get Started - It's free
                 </Button>
-              </Link>
+              </Link>}
             </div>
 
             {/* Hero Visual */}
@@ -300,7 +314,7 @@ export default function Index() {
             <p className="text-muted-foreground text-sm">
               © 2024 LearnPilot. All rights reserved.
             </p>
-            
+
           </div>
         </div>
       </footer>

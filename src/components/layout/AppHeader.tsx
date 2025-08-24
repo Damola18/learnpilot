@@ -20,9 +20,6 @@ export function AppHeader() {
   const [isDark, setIsDark] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  
-
- 
 
   const getAvatarUrl = () => {
     const metadata = user?.user_metadata || {};
