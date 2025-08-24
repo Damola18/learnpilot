@@ -34,6 +34,7 @@ import { slugToTitle } from '@/utils/slugUtils';
 import { GeneratedLearningPath } from '@/services/iqaiCurriculumService';
 import { usePathProgress } from "@/contexts/PathProgressContext";
 import { formatPathDuration } from "@/utils/timeFormatUtils";
+import { LearningPath } from "./LearningPaths";
 
 interface PathItem {
   id: string;
@@ -140,7 +141,7 @@ export default function PathDetail() {
     };
 
     loadPathData();
-  }, []);
+  });
   console.log(pathData)
   const convertToPathData = (learningPath: any, slug: string): PathData => {
     const generatedPath = learningPath.generatedPath as GeneratedLearningPath;
