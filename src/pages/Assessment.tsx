@@ -151,7 +151,7 @@ const Assessment = () => {
       {/* Progress */}
       <Card className="max-w-4xl mx-auto">
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <Brain className="h-5 w-5 text-primary" />
               <CardTitle>Knowledge Assessment</CardTitle>
@@ -160,7 +160,7 @@ const Assessment = () => {
               {currentQuestion + 1} of {questions.length}
             </Badge>
           </div>
-          <Progress value={((currentQuestion + 1) / questions.length) * 100} className="mt-4" />
+          <Progress value={((currentQuestion + 1) / questions.length) * 100} className="h-2" />
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">

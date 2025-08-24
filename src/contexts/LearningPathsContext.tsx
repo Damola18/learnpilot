@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { GeneratedLearningPath } from "@/services/iqaiCurriculumService";
 import { parseDurationToHours } from "@/utils/durationUtils";
 
-interface LearningPath {
+export interface LearningPath {
   id: string;
   title: string;
   description: string;

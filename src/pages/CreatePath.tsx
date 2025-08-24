@@ -148,8 +148,8 @@ export default function CreatePath() {
                     values.motivationLevel[0] > 7
                         ? ('fast' as const)
                         : values.motivationLevel[0] > 4
-                        ? ('moderate' as const)
-                        : ('slow' as const),
+                            ? ('moderate' as const)
+                            : ('slow' as const),
             }
 
             // Generate learning path using IQAI service
@@ -501,7 +501,7 @@ export default function CreatePath() {
                         >
                             Create Another Path
                         </Button>
-                        <Button 
+                        <Button
                             onClick={handleSavePath}
                             className='bg-green-600 hover:bg-green-700'
                         >
@@ -563,11 +563,8 @@ export default function CreatePath() {
                                     <div
                                         className='h-1 bg-primary rounded-full transition-all duration-500'
                                         style={{
-                                            width: `${
-                                                ((currentStep - 1) /
-                                                    (totalSteps - 1)) *
-                                                100
-                                            }%`,
+                                            width: `${currentStep >= 2 ? 100 : 0
+                                                }%`,
                                         }}
                                     />
                                 </div>
@@ -590,9 +587,8 @@ export default function CreatePath() {
                                     <div
                                         className='h-1 bg-primary rounded-full transition-all duration-500'
                                         style={{
-                                            width: `${
-                                                currentStep >= 3 ? 100 : 0
-                                            }%`,
+                                            width: `${currentStep >= 3 ? 100 : 0
+                                                }%`,
                                         }}
                                     />
                                 </div>

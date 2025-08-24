@@ -1,17 +1,22 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { 
-  ChevronLeft, 
-  Clock, 
-  Users, 
-  CheckCircle, 
-  Circle, 
+import {
+  ChevronLeft,
+  Clock,
+  Users,
+  CheckCircle,
+  Circle,
   Pause,
   X,
   ChevronDown,
   ChevronUp,
   BookOpen,
-  Loader2
+  Loader2,
+  Brain,
+  NotebookPen,
+  NotebookText,
+  XCircle,
+  PlayCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,10 +29,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useLearningPaths } from '@/contexts/LearningPathsContext';
+import { LearningPath, useLearningPaths } from '@/contexts/LearningPathsContext';
 import { slugToTitle } from '@/utils/slugUtils';
 import { GeneratedLearningPath } from '@/services/iqaiCurriculumService';
 import { usePathProgress } from "@/contexts/PathProgressContext";
+import { formatPathDuration } from "@/utils/timeFormatUtils";
 
 interface PathItem {
   id: string;
@@ -94,37 +100,37 @@ export default function PathDetail() {
         }
 
         const convertedData = convertToPathData(matchingPath, slug);
-        
+
 
         initializePathProgress(matchingPath.id, slug, convertedData.totalItems);
-      
+
         const savedProgress = getPathProgress(matchingPath.id, slug);
-      
+
         if (savedProgress) {
-        
-        const sectionsWithProgress = convertedData.sections.map(section => ({
-        ...section,
-        isExpanded: section.isExpanded,
-        items: section.items.map(item => ({
-        ...item,
-        status: savedProgress.items[item.id]?.status || item.status
-        }))
-        }));
-        
-        convertedData.sections = sectionsWithProgress;
-        convertedData.totalProgress = savedProgress.totalProgress;
-        convertedData.completedItems = savedProgress.completedItems;
+
+          const sectionsWithProgress = convertedData.sections.map(section => ({
+            ...section,
+            isExpanded: section.isExpanded,
+            items: section.items.map(item => ({
+              ...item,
+              status: savedProgress.items[item.id]?.status || item.status
+            }))
+          }));
+
+          convertedData.sections = sectionsWithProgress;
+          convertedData.totalProgress = savedProgress.totalProgress;
+          convertedData.completedItems = savedProgress.completedItems;
         }
-        
+
         setPathData(convertedData);
         updatePath(matchingPath.id, {
           lastAccessed: new Date().toLocaleString(),
           progress: convertedData.totalProgress,
           completedModules: convertedData.completedItems,
-          status: convertedData.totalProgress === 100 ? 'completed' : 
-                  convertedData.totalProgress > 0 ? 'active' : 'not_started'
+          status: convertedData.totalProgress === 100 ? 'completed' :
+            convertedData.totalProgress > 0 ? 'active' : 'not_started'
         });
-        
+
         setLoading(false);
       } catch (err) {
         console.error('Error loading path data:', err);
@@ -134,11 +140,11 @@ export default function PathDetail() {
     };
 
     loadPathData();
-  }, [slug, learningPaths, getPathProgress, initializePathProgress, updatePath]);
-
-  const convertToPathData = (learningPath: any, slug: string): PathData => {
+  }, []);
+  console.log(pathData)
+  const convertToPathData = (learningPath: LearningPath, slug: string): PathData => {
     const generatedPath = learningPath.generatedPath as GeneratedLearningPath;
-    
+
     if (!generatedPath) {
       return {
         id: learningPath.id,
@@ -160,7 +166,7 @@ export default function PathDetail() {
       title: `Section ${index + 1}: ${module.title}`,
       description: module.description,
       totalDuration: `${module.duration} min`,
-      isExpanded: index === 0, 
+      isExpanded: index === 0,
       items: [
         ...module.competencies.map((competency, compIndex) => ({
           id: `${module.id}-competency-${compIndex}`,
@@ -191,7 +197,7 @@ export default function PathDetail() {
     }));
 
     const totalItems = sections.reduce((sum, section) => sum + section.items.length, 0);
-    const completedItems = sections.reduce((sum, section) => 
+    const completedItems = sections.reduce((sum, section) =>
       sum + section.items.filter(item => item.status === 'done').length, 0
     );
 
@@ -220,28 +226,28 @@ export default function PathDetail() {
         .replace(/^-+|-+$/g, '');
       return pathSlug === slug;
     });
-  
+
     if (matchingPath) {
       updateItemStatus(matchingPath.id, slug!, itemId, newStatus);
-      
+
       const { progress, completed } = calculateProgress(matchingPath.id, slug!);
 
       setPathData(prevPathData => {
         if (!prevPathData) return null;
-        
-        const updatedSections = prevPathData.sections.map(section => 
-          section.id === sectionId 
+
+        const updatedSections = prevPathData.sections.map(section =>
+          section.id === sectionId
             ? {
-                ...section,
-                items: section.items.map(item => 
-                  item.id === itemId 
-                    ? { ...item, status: newStatus as "pending" | "done" | "in-progress" | "skip" }
-                    : item
-                )
-              }
+              ...section,
+              items: section.items.map(item =>
+                item.id === itemId
+                  ? { ...item, status: newStatus as "pending" | "done" | "in-progress" | "skip" }
+                  : item
+              )
+            }
             : section
         );
-        
+
         return {
           ...prevPathData,
           sections: updatedSections,
@@ -249,7 +255,7 @@ export default function PathDetail() {
           completedItems: completed
         };
       });
-      
+
       updatePath(matchingPath.id, {
         progress: progress,
         completedModules: completed,
@@ -260,30 +266,30 @@ export default function PathDetail() {
   };
 
   const toggleSectionExpanded = (sectionId: string) => {
-    setPathData(prevPathData => {
-      if (!prevPathData) return null;
-      
-      return {
-        ...prevPathData,
-        sections: prevPathData.sections.map(section => 
-          section.id === sectionId 
-            ? { ...section, isExpanded: !section.isExpanded }
-            : section
+    setPathData(prev => {
+      if (!prev) return null;
+      const updated = {
+        ...prev,
+        sections: prev.sections.map(s =>
+          s.id === sectionId
+            ? { ...s, isExpanded: !s.isExpanded }
+            : s
         )
       };
+      return updated;
     });
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "done":
-        return <CheckCircle className="w-5 h-5 text-primary fill-primary" />;
+        return <CheckCircle className="w-5 h-5 text-green-300 bg-green-500/20 rounded-full" />;
       case "in-progress":
-        return <Circle className="w-5 h-5 text-warning fill-warning" />;
+        return <PlayCircle className="w-5 h-5 text-yellow-300 bg-yellow-500/20 rounded-full" />;
       case "skip":
-        return <X className="w-5 h-5 text-muted-foreground" />;
+        return <XCircle className="w-5 h-5 text-red-300 bg-red-500/20 rounded-full " />;
       default:
-        return <Circle className="w-5 h-5 text-muted-foreground" />;
+        return <Circle className="w-5 h-5 text-slate-300 bg-slate-500/5 rounded-full" />;
     }
   };
 
@@ -292,14 +298,16 @@ export default function PathDetail() {
       case "role-play":
         return <Users className="w-4 h-4 text-primary" />;
       case "quiz":
+        return <NotebookText className="w-4 h-4 text-orange-300" />;
       case "assessment":
-        return <BookOpen className="w-4 h-4 text-secondary" />;
+        return <NotebookPen className="w-4 h-4 text-red-300" />;
       case "resource":
-        return <BookOpen className="w-4 h-4 text-blue-500" />;
+        return <Brain className="w-4 h-4 text-yellow-300" />;
       default:
-        return <BookOpen className="w-4 h-4 text-muted-foreground" />;
+        return <BookOpen className="w-4 h-4 text-green-300" />;
     }
   };
+
 
   const getTypeLabel = (type: string) => {
     switch (type) {
@@ -358,18 +366,18 @@ export default function PathDetail() {
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <CardTitle className="text-2xl mb-2">{pathData.title}</CardTitle>
-              <p className="text-muted-foreground mb-4">{pathData.description}</p>
+              <CardTitle className="text-2xl mb-2">{pathData.description}</CardTitle>
+              <p className="text-muted-foreground mb-4">Goal: {pathData.title}</p>
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 {pathData.difficulty && (
                   <div className="flex items-center gap-1">
-                    <Badge variant="outline">{pathData.difficulty}</Badge>
+                    <Badge className="capitalize font-thin" variant="outline">{pathData.difficulty}</Badge>
                   </div>
                 )}
                 {pathData.estimatedTime && (
                   <div className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
-                    <span>{pathData.estimatedTime}</span>
+                    <span>{formatPathDuration(pathData.estimatedTime)}</span>
                   </div>
                 )}
                 <div className="flex items-center gap-1">
@@ -392,9 +400,13 @@ export default function PathDetail() {
       <div className="space-y-4">
         {pathData.sections.map((section) => (
           <Card key={section.id}>
-            <CardHeader 
+            <CardHeader
               className="cursor-pointer hover:bg-muted/50 transition-colors"
-              onClick={() => toggleSectionExpanded(section.id)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleSectionExpanded(section.id)
+              }}
             >
               <div className="flex items-center justify-between">
                 <div className="flex-1">
@@ -405,9 +417,9 @@ export default function PathDetail() {
                   <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Clock className="w-4 h-4" />
-                      <span>{section.totalDuration}</span>
+                      <span>{formatPathDuration(section.totalDuration)}</span>
                     </div>
-                    <span>{section.items.length} items</span>
+                    <span>{section.items.filter(item => item.status === 'done').length}/{section.items.length} items completed</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -419,16 +431,16 @@ export default function PathDetail() {
                 </div>
               </div>
             </CardHeader>
-            
+
             {section.isExpanded && (
               <CardContent className="pt-0">
                 <div className="space-y-3">
                   {section.items.map((item) => (
-                    <div key={item.id} className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
+                    <div key={item.id} className={`flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors, ${item.status === "done" && "bg-green-500/10 hover:bg-green-500/10"}`}>
                       <div className="flex-shrink-0">
                         {getStatusIcon(item.status)}
                       </div>
-                      
+
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           {getTypeIcon(item.type)}
@@ -444,10 +456,10 @@ export default function PathDetail() {
                         )}
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <Clock className="w-3 h-3" />
-                          <span>{item.duration}</span>
+                          <span>{item.duration !== "NaN min" ? item.duration : "5 min"}</span>
                         </div>
                       </div>
-                      
+
                       <div className="flex-shrink-0">
                         <Select
                           value={item.status}
