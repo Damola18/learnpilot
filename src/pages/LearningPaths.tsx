@@ -17,6 +17,7 @@ import {
   Eye,
   Archive,
   CheckCircle,
+  ChartColumn,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -80,111 +81,6 @@ interface EditFormData {
   category: string;
 }
 
-const mockPaths: LearningPath[] = [
-  {
-    id: 1,
-    title: "React Advanced Concepts",
-    description: "Master hooks, context, performance optimization, and advanced patterns",
-    progress: 65,
-    totalModules: 12,
-    completedModules: 8,
-    difficulty: "Intermediate",
-    estimatedTime: "24 hours",
-    category: "Frontend Development",
-    status: "active",
-    rating: 4.8,
-    enrollments: 1250,
-    color: "bg-blue-500",
-    tags: ["React", "JavaScript", "Hooks"],
-    lastAccessed: "2 hours ago",
-  },
-  {
-    id: 2,
-    title: "Machine Learning Fundamentals",
-    description: "Complete introduction to ML algorithms, data preprocessing, and model evaluation",
-    progress: 30,
-    totalModules: 16,
-    completedModules: 5,
-    difficulty: "Beginner",
-    estimatedTime: "32 hours",
-    category: "Data Science",
-    status: "active",
-    rating: 4.9,
-    enrollments: 2100,
-    color: "bg-green-500",
-    tags: ["Python", "ML", "Data Science"],
-    lastAccessed: "1 day ago",
-  },
-  {
-    id: 3,
-    title: "UX Design Principles",
-    description: "Learn user-centered design, prototyping, and usability testing",
-    progress: 90,
-    totalModules: 8,
-    completedModules: 7,
-    difficulty: "Intermediate",
-    estimatedTime: "16 hours",
-    category: "Design",
-    status: "active",
-    rating: 4.7,
-    enrollments: 890,
-    color: "bg-purple-500",
-    tags: ["Design", "UX", "Figma"],
-    lastAccessed: "3 days ago",
-  },
-  {
-    id: 4,
-    title: "Full-Stack JavaScript Development",
-    description: "Build complete web applications with Node.js, Express, and MongoDB",
-    progress: 0,
-    totalModules: 20,
-    completedModules: 0,
-    difficulty: "Advanced",
-    estimatedTime: "40 hours",
-    category: "Full-Stack Development",
-    status: "not_started",
-    rating: 4.9,
-    enrollments: 1560,
-    color: "bg-yellow-500",
-    tags: ["JavaScript", "Node.js", "MongoDB"],
-    lastAccessed: "Never",
-  },
-  {
-    id: 5,
-    title: "DevOps with Docker & Kubernetes",
-    description: "Master containerization and orchestration for modern applications",
-    progress: 100,
-    totalModules: 14,
-    completedModules: 14,
-    difficulty: "Advanced",
-    estimatedTime: "28 hours",
-    category: "DevOps",
-    status: "completed",
-    rating: 4.8,
-    enrollments: 750,
-    color: "bg-indigo-500",
-    tags: ["Docker", "Kubernetes", "DevOps"],
-    lastAccessed: "1 week ago",
-  },
-  {
-    id: 6,
-    title: "Mobile Development with React Native",
-    description: "Build cross-platform mobile apps with React Native and Expo",
-    progress: 45,
-    totalModules: 18,
-    completedModules: 8,
-    difficulty: "Intermediate",
-    estimatedTime: "36 hours",
-    category: "Mobile Development",
-    status: "active",
-    rating: 4.6,
-    enrollments: 980,
-    color: "bg-pink-500",
-    tags: ["React Native", "Mobile", "JavaScript"],
-    lastAccessed: "5 hours ago",
-  },
-];
-
 const categories = [
   "All Categories",
   "Frontend Development",
@@ -216,12 +112,12 @@ export default function LearningPaths() {
     category: "",
   });
 
-  const { 
-    paths, 
-    getTotalPaths, 
-    getActivePaths, 
-    getCompletedPaths, 
-    getTotalHours 
+  const {
+    paths,
+    getTotalPaths,
+    getActivePaths,
+    getCompletedPaths,
+    getTotalHours
   } = useLearningPaths()
   const { toast } = useToast();
 
@@ -229,10 +125,10 @@ export default function LearningPaths() {
     const matchesSearch = path.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       path.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       path.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-    
+
     const matchesCategory = selectedCategory === "All Categories" || path.category === selectedCategory;
     const matchesDifficulty = selectedDifficulty === "All Levels" || path.difficulty === selectedDifficulty;
-    const matchesStatus = selectedStatus === "All Statuses" || 
+    const matchesStatus = selectedStatus === "All Statuses" ||
       (selectedStatus === "Active" && path.status === "active") ||
       (selectedStatus === "Completed" && path.status === "completed") ||
       (selectedStatus === "Not Started" && path.status === "not_started");
@@ -255,6 +151,41 @@ export default function LearningPaths() {
       category: path.category,
     });
     setIsEditModalOpen(true);
+  };
+  const formatTime = (timestamp: string | number | Date) => {
+    const now = new Date();
+    const past = new Date(timestamp);
+
+    if (isNaN(past.getTime())) {
+      return 'Invalid date';
+    }
+
+    const diffInMs = now.getTime() - past.getTime();
+
+    if (diffInMs < 0) {
+      return 'In the future';
+    }
+
+    const seconds = Math.floor(diffInMs / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    const months = Math.floor(days / 30);
+    const years = Math.floor(days / 365);
+
+    if (seconds < 60) {
+      return seconds <= 1 ? 'just now' : `${seconds} secs ago`;
+    } else if (minutes < 60) {
+      return minutes === 1 ? '1 min ago' : `${minutes} mins ago`;
+    } else if (hours < 24) {
+      return hours === 1 ? '1 hr ago' : `${hours} hrs ago`;
+    } else if (days < 30) {
+      return days === 1 ? '1 day ago' : `${days} days ago`;
+    } else if (months < 12) {
+      return months === 1 ? '1 month ago' : `${months} months ago`;
+    } else {
+      return years === 1 ? '1 year ago' : `${years} years ago`;
+    }
   };
 
   const handleDownloadProgress = (path: LearningPath) => {
@@ -305,7 +236,7 @@ export default function LearningPaths() {
 
   const getActionButton = (path: LearningPath) => {
     const slug = generateSlug(path.title);
-    
+
     switch (path.status) {
       case "completed":
         return (
@@ -327,7 +258,7 @@ export default function LearningPaths() {
         );
       case "not_started":
         return (
-          <Button variant="outline" size="sm" asChild>
+          <Button className="hover:scale-105 hover:text-white hover:bg-cyan-500 transition-all " variant="outline" size="sm" asChild>
             <Link to={`/dashboard/paths/${slug}`}>
               <PlayCircle className="w-4 h-4 mr-2" />
               Start Learning
@@ -380,7 +311,7 @@ export default function LearningPaths() {
                   {getActivePaths()}
                 </p>
               </div>
-              <TrendingUp className="w-8 h-8 text-warning" />
+              <TrendingUp className="w-8 h-8 text-red-400" />
             </div>
           </CardContent>
         </Card>
@@ -394,7 +325,7 @@ export default function LearningPaths() {
                   {getCompletedPaths()}
                 </p>
               </div>
-              <Target className="w-8 h-8 text-success" />
+              <Target className="w-8 h-8 text-green-500" />
             </div>
           </CardContent>
         </Card>
@@ -403,12 +334,12 @@ export default function LearningPaths() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Total Hours</p>
+                <p className="text-sm text-muted-foreground">Total Progress</p>
                 <p className="text-2xl font-bold text-foreground">
                   {getTotalHours()}h
                 </p>
               </div>
-              <Clock className="w-8 h-8 text-primary" />
+              <ChartColumn className="w-8 h-8 text-purple-400" />
             </div>
           </CardContent>
         </Card>
@@ -479,16 +410,16 @@ export default function LearningPaths() {
         {filteredPaths.map((path) => (
           <Card
             key={path.id}
-            className="border shadow-card hover:shadow-learning transition-all duration-200 group"
+            className="border shadow-card hover:bg-primary/5 hover:shadow-learning transition-all duration-200 group"
           >
             <CardHeader className="pb-4">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <div className={`w-3 h-3 rounded-full ${path.color}`} />
                     <h3 className="font-semibold text-lg text-card-foreground group-hover:text-primary transition-colors">
                       {path.title}
                     </h3>
+                    <div className={`w-3 h-3 rounded-full ${path.color}`} />
                     {getStatusBadge(path.status, path.progress)}
                   </div>
                   <p className="text-muted-foreground text-sm mb-3">
@@ -496,13 +427,13 @@ export default function LearningPaths() {
                   </p>
                   <div className="flex flex-wrap gap-2 mb-3">
                     {path.tags.map((tag) => (
-                      <Badge key={tag} variant="outline" className="text-xs">
+                      <Badge key={tag} variant="outline" className="text-xs capitalize  font-thin ">
                         {tag}
                       </Badge>
                     ))}
                   </div>
                 </div>
-                
+
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm">
@@ -512,16 +443,16 @@ export default function LearningPaths() {
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => handleViewDetails({...path, id: Number(path.id)})}>
+                    <DropdownMenuItem onClick={() => handleViewDetails({ ...path, id: Number(path.id) })}>
                       <Eye className="w-4 h-4 mr-2" />
                       View Details
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleDownloadProgress({...path, id: Number(path.id)})}>
+                    <DropdownMenuItem onClick={() => handleDownloadProgress({ ...path, id: Number(path.id) })}>
                       <Download className="w-4 h-4 mr-2" />
                       Download Progress
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => handleArchivePath({...path, id: Number(path.id)})} className="text-destructive">
+                    <DropdownMenuItem onClick={() => handleArchivePath({ ...path, id: Number(path.id) })} className="text-destructive">
                       <Archive className="w-4 h-4 mr-2" />
                       Archive Path
                     </DropdownMenuItem>
@@ -532,7 +463,7 @@ export default function LearningPaths() {
 
             <CardContent className="space-y-4">
               {/* Progress Section */}
-              {path.status !== "not_started" && (
+              {path.status && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Progress</span>
@@ -541,7 +472,7 @@ export default function LearningPaths() {
                   <Progress value={path.progress} className="h-2" />
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>{path.completedModules}/{path.totalModules} modules</span>
-                    <span>Last accessed: {path.lastAccessed}</span>
+                    {path.lastAccessed !== "Never" ? <span>Last accessed: {formatTime(path.lastAccessed)}</span> : <></>}
                   </div>
                 </div>
               )}
@@ -557,17 +488,9 @@ export default function LearningPaths() {
                     <Target className="w-4 h-4" />
                     <span>{path.difficulty}</span>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Users className="w-4 h-4" />
-                    <span>{path.enrollments.toLocaleString()}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Star className="w-4 h-4 fill-current text-warning" />
-                    <span>{path.rating}</span>
-                  </div>
                 </div>
 
-                {getActionButton({...path, id: Number(path.id)})}
+                {getActionButton({ ...path, id: Number(path.id) })}
               </div>
             </CardContent>
           </Card>
