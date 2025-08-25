@@ -20,6 +20,7 @@ import Settings from './pages/Settings'
 import Profile from './pages/Profile'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import ConfirmEmail from './pages/ConfirmEmail'
 import ForgotPassword from './pages/ForgotPassword'
 import NotFound from './pages/NotFound'
 import Index from './pages/Index'
@@ -29,8 +30,8 @@ const queryClient = new QueryClient()
 const App = () => (
     <QueryClientProvider client={queryClient}>
         <AuthProvider>
-            <LearningPathsProvider>
-                <PathProgressProvider>
+            <PathProgressProvider>
+                <LearningPathsProvider>
                     <TooltipProvider>
                         <Toaster />
                         <Sonner />
@@ -42,6 +43,10 @@ const App = () => (
                                 <Route
                                     path='/register'
                                     element={<Register />}
+                                />
+                                <Route
+                                    path='/confirm-email'
+                                    element={<ConfirmEmail />}
                                 />
                                 <Route
                                     path='/forgot-password'
@@ -91,14 +96,13 @@ const App = () => (
                                         path='profile'
                                         element={<Profile />}
                                     />
-                                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                                 </Route>
                                 <Route path='*' element={<NotFound />} />
                             </Routes>
                         </BrowserRouter>
                     </TooltipProvider>
-                </PathProgressProvider>
-            </LearningPathsProvider>
+                </LearningPathsProvider>
+            </PathProgressProvider>
         </AuthProvider>
     </QueryClientProvider>
 )
