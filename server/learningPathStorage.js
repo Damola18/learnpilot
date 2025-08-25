@@ -7,6 +7,7 @@ import {
     InMemoryArtifactService,
     LoadArtifactsTool,
     createTool,
+    DatabaseSessionService,
 } from '@iqai/adk'
 import { v4 as uuidv4 } from 'uuid'
 import * as z from 'zod'
@@ -15,30 +16,39 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 const APP_NAME = 'learning-path-storage'
+const USER_ID = uuidv4()
 
 // Helper function to get SQLite connection string
+// function getSqliteConnectionString(dbName) {
+//     const dataDir = path.join(__dirname, 'data')
+//     const dbPath = path.join(dataDir, `${dbName}.db`)
+
+//     // Ensure the data directory exists with proper permissions
+//     if (!fs.existsSync(dataDir)) {
+//         fs.mkdirSync(dataDir, { recursive: true, mode: 0o755 })
+//         console.log(`Created database directory: ${dataDir}`)
+//     }
+
+//     // Verify the directory is writable
+//     try {
+//         fs.accessSync(dataDir, fs.constants.W_OK)
+//         console.log(`Database directory is writable: ${dataDir}`)
+//     } catch (error) {
+//         console.error(`Database directory is not writable: ${dataDir}`, error)
+//         throw new Error(`Cannot write to database directory: ${dataDir}`)
+//     }
+
+//     console.log(`Using database path: ${dbPath}`)
+
+//     // Use file: protocol for SQLite connection
+//     return `sqlite:///${dbPath}`
+// }
+
 function getSqliteConnectionString(dbName) {
-    const dataDir = path.join(__dirname, 'data')
-    const dbPath = path.join(dataDir, `${dbName}.db`)
-
-    // Ensure the data directory exists with proper permissions
-    if (!fs.existsSync(dataDir)) {
-        fs.mkdirSync(dataDir, { recursive: true, mode: 0o755 })
-        console.log(`Created database directory: ${dataDir}`)
+    const dbPath = path.join(__dirname, 'data', `${dbName}.db`)
+    if (!fs.existsSync(path.dirname(dbPath))) {
+        fs.mkdirSync(path.dirname(dbPath), { recursive: true })
     }
-
-    // Verify the directory is writable
-    try {
-        fs.accessSync(dataDir, fs.constants.W_OK)
-        console.log(`Database directory is writable: ${dataDir}`)
-    } catch (error) {
-        console.error(`Database directory is not writable: ${dataDir}`, error)
-        throw new Error(`Cannot write to database directory: ${dataDir}`)
-    }
-
-    console.log(`Using database path: ${dbPath}`)
-
-    // Use file: protocol for SQLite connection
     return `sqlite:///${dbPath}`
 }
 
@@ -158,7 +168,8 @@ const getLearningPathTool = createTool({
     fn: async ({ pathId }, context) => {
         try {
             // Get metadata from session state
-            const learningPaths = context.state.get('learning_paths', [])
+            console.log('===')
+            const learningPaths = await context.state.get('learning_paths', [])
             const pathMetadata = learningPaths.find((p) => p.id === pathId)
 
             if (!pathMetadata) {
@@ -464,6 +475,10 @@ export async function createLearningPathStorageAgent(userId = null) {
         console.log('Attempting fallback to in-memory storage...')
 
         try {
+            // const artifactService = new DatabaseSessionService({
+            //     db: database, // Your configured Kysely instance
+            //     skipTableCreation: false, // Let service create tables automatically
+            // })
             const artifactService = new InMemoryArtifactService()
 
             const { runner, session } = await AgentBuilder.create(

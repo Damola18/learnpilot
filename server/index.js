@@ -4,7 +4,7 @@ import { AgentBuilder } from '@iqai/adk'
 import dotenv from 'dotenv'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { createLearningPathStorageAgent } from './learningPathStorage.js'
+import { directStorage } from './directStorage.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -134,9 +134,7 @@ app.post('/save-learning-path', async (req, res) => {
                 .json({ error: 'Learning path data is required' })
         }
 
-        console.log('Server: saving learning path with storage agent')
-
-        const { runner, session } = await createLearningPathStorageAgent(userId)
+        console.log('Server: saving learning path using direct storage')
 
         // Prepare metadata from learner profile
         const metadata = {
@@ -146,71 +144,18 @@ app.post('/save-learning-path', async (req, res) => {
             tags: learnerProfile?.domain ? [learnerProfile.domain] : [],
         }
 
-        // Since the agent tools aren't being recognized properly, let's implement a simple storage solution
-        // Store the learning path data directly in session state for now
-        try {
-            const learningPaths = session?.state?.get('learning_paths') || []
+        // Use direct storage
+        const result = await directStorage.saveLearningPath(
+            learningPath,
+            metadata,
+        )
 
-            const pathRecord = {
-                id: learningPath.id,
-                title: learningPath.title,
-                description: learningPath.description,
-                difficulty: learningPath.difficulty,
-                totalDuration: learningPath.totalDuration,
-                moduleCount: learningPath.modules?.length || 0,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-                status: 'active',
-                curriculum: learningPath, // Store full curriculum
-                ...metadata,
-            }
+        console.log(
+            'Server: learning path saved successfully with direct storage',
+        )
 
-            learningPaths.push(pathRecord)
-            session?.state?.set('learning_paths', learningPaths)
-
-            console.log('Server: learning path saved successfully')
-            console.log('Server: total paths stored:', learningPaths.length)
-
-            res.setHeader('Content-Type', 'application/json')
-            return res.status(200).json({
-                success: true,
-                pathId: learningPath.id,
-                message: `Learning path '${learningPath.title}' saved successfully`,
-            })
-        } catch (directError) {
-            console.error('Direct storage error:', directError)
-            // Fallback to in-memory storage
-            global.learningPaths = global.learningPaths || []
-
-            const pathRecord = {
-                id: learningPath.id,
-                title: learningPath.title,
-                description: learningPath.description,
-                difficulty: learningPath.difficulty,
-                totalDuration: learningPath.totalDuration,
-                moduleCount: learningPath.modules?.length || 0,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-                status: 'active',
-                curriculum: learningPath,
-                ...metadata,
-            }
-
-            global.learningPaths.push(pathRecord)
-
-            console.log('Server: learning path saved to fallback storage')
-            console.log(
-                'Server: total paths in fallback:',
-                global.learningPaths.length,
-            )
-
-            res.setHeader('Content-Type', 'application/json')
-            return res.status(200).json({
-                success: true,
-                pathId: learningPath.id,
-                message: `Learning path '${learningPath.title}' saved successfully (fallback)`,
-            })
-        }
+        res.setHeader('Content-Type', 'application/json')
+        return res.status(200).json(result)
     } catch (err) {
         console.error('save-learning-path error:', err)
         return res.status(500).json({ error: err?.message || String(err) })
@@ -221,37 +166,22 @@ app.post('/save-learning-path', async (req, res) => {
 app.get('/learning-path/:id', async (req, res) => {
     try {
         const { id } = req.params
-        const { userId } = req.query
 
-        console.log('Server: retrieving learning path:', id)
+        console.log(
+            'Server: retrieving learning path using direct storage:',
+            id,
+        )
 
-        // Try to get path from session storage first, then fallback to global storage
-        let learningPaths = []
+        const result = await directStorage.getLearningPath(id)
 
-        try {
-            const { session } = await createLearningPathStorageAgent(userId)
-            learningPaths = session?.state?.get('learning_paths') || []
-        } catch (sessionError) {
-            learningPaths = global.learningPaths || []
+        if (!result.success) {
+            return res.status(404).json(result)
         }
 
-        const pathMetadata = learningPaths.find((p) => p.id === id)
-
-        if (!pathMetadata) {
-            return res.status(404).json({
-                success: false,
-                message: `Learning path '${id}' not found`,
-            })
-        }
-
-        console.log('Server: learning path retrieved')
+        console.log('Server: learning path retrieved from direct storage')
 
         res.setHeader('Content-Type', 'application/json')
-        return res.status(200).json({
-            success: true,
-            metadata: pathMetadata,
-            learningPath: pathMetadata.curriculum,
-        })
+        return res.status(200).json(result)
     } catch (err) {
         console.error('get-learning-path error:', err)
         return res.status(500).json({ error: err?.message || String(err) })
@@ -263,104 +193,116 @@ app.get('/learning-paths', async (req, res) => {
     try {
         const { difficulty, domain, userId, limit, status } = req.query
 
-        console.log('Server: listing learning paths with filters:', {
-            difficulty,
-            domain,
-            userId,
-            limit,
-            status,
-        })
-
-        // Try to get paths from session storage first, then fallback to global storage
-        let learningPaths = []
-
-        try {
-            const { session } = await createLearningPathStorageAgent(userId)
-            learningPaths = session?.state?.get('learning_paths') || []
-            console.log(
-                'Server: loaded paths from session storage:',
-                learningPaths.length,
-            )
-        } catch (sessionError) {
-            console.log('Session storage not available, using fallback storage')
-            learningPaths = global.learningPaths || []
-            console.log(
-                'Server: loaded paths from fallback storage:',
-                learningPaths.length,
-            )
-        }
-
-        // Apply filters
-        let filteredPaths = learningPaths.filter((path) => {
-            if (status && path.status !== status) return false
-            if (difficulty && path.difficulty !== difficulty) return false
-            if (domain && path.domain !== domain) return false
-            if (userId && path.userId !== userId) return false
-            return true
-        })
-
-        // Sort by creation date (newest first)
-        filteredPaths.sort(
-            (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+        console.log(
+            'Server: listing learning paths using direct storage with filters:',
+            {
+                difficulty,
+                domain,
+                userId,
+                limit,
+                status,
+            },
         )
 
-        // Apply limit
-        const limitNum = parseInt(limit) || 20
-        filteredPaths = filteredPaths.slice(0, limitNum)
+        const filters = {}
+        if (difficulty) filters.difficulty = difficulty
+        if (domain) filters.domain = domain
+        if (status) filters.status = status
+        if (limit) filters.limit = limit
+
+        const result = await directStorage.listLearningPaths(filters)
 
         console.log(
-            'Server: learning paths listed, filtered count:',
-            filteredPaths.length,
+            'Server: learning paths retrieved from direct storage, count:',
+            result.count,
         )
 
         res.setHeader('Content-Type', 'application/json')
-        return res.status(200).json({
-            success: true,
-            count: filteredPaths.length,
-            totalStored: learningPaths.length,
-            paths: filteredPaths.map((path) => ({
-                id: path.id,
-                title: path.title,
-                description: path.description,
-                difficulty: path.difficulty,
-                totalDuration: path.totalDuration,
-                moduleCount: path.moduleCount,
-                createdAt: path.createdAt,
-                domain: path.domain,
-                tags: path.tags,
-                status: path.status,
-                curriculum: path.curriculum, // Include full curriculum for frontend
-            })),
-        })
+        return res.status(200).json(result)
     } catch (err) {
         console.error('list-learning-paths error:', err)
         return res.status(500).json({ error: err?.message || String(err) })
     }
 })
 
-// Resource analytics endpoint
+// Resource analytics endpoint - simplified without ADK dependency
 app.get('/resource-analytics', async (req, res) => {
     try {
-        const { pathId, resourceType, userId } = req.query
+        const { pathId, resourceType } = req.query
 
-        console.log('Server: generating resource analytics')
+        console.log(
+            'Server: generating resource analytics using direct storage',
+        )
 
-        const { runner } = await createLearningPathStorageAgent(userId)
+        // Get learning paths and analyze resource usage
+        const pathsResult = await directStorage.listLearningPaths()
 
-        let instruction = `Generate resource analytics`
-        if (pathId) instruction += ` for learning path: ${pathId}`
-        if (resourceType)
-            instruction += ` filtered by resource type: ${resourceType}`
-        instruction += `\n\nUse the get_resource_analytics tool to analyze resource usage patterns.`
+        if (!pathsResult.success) {
+            return res
+                .status(500)
+                .json({ error: 'Failed to retrieve learning paths' })
+        }
 
-        const response = await runner.ask(instruction)
+        const paths = pathsResult.paths
+        let filteredPaths = paths
+
+        if (pathId) {
+            filteredPaths = paths.filter((p) => p.id === pathId)
+        }
+
+        // Analyze resources across all paths or specific path
+        const analytics = {
+            totalPaths: filteredPaths.length,
+            totalResources: 0,
+            resourcesByType: {},
+            averageResourcesPerPath: 0,
+            pathAnalytics: [],
+        }
+
+        filteredPaths.forEach((path) => {
+            const pathResources = []
+            const pathResourceTypes = {}
+
+            if (path.curriculum && path.curriculum.modules) {
+                path.curriculum.modules.forEach((module) => {
+                    if (module.resources) {
+                        module.resources.forEach((resource) => {
+                            if (
+                                !resourceType ||
+                                resource.type === resourceType
+                            ) {
+                                pathResources.push(resource)
+                                pathResourceTypes[resource.type] =
+                                    (pathResourceTypes[resource.type] || 0) + 1
+                                analytics.resourcesByType[resource.type] =
+                                    (analytics.resourcesByType[resource.type] ||
+                                        0) + 1
+                                analytics.totalResources++
+                            }
+                        })
+                    }
+                })
+            }
+
+            analytics.pathAnalytics.push({
+                pathId: path.id,
+                title: path.title,
+                totalResources: pathResources.length,
+                resourcesByType: pathResourceTypes,
+            })
+        })
+
+        if (filteredPaths.length > 0) {
+            analytics.averageResourcesPerPath =
+                analytics.totalResources / filteredPaths.length
+        }
 
         console.log('Server: resource analytics generated')
 
         res.setHeader('Content-Type', 'application/json')
         return res.status(200).json({
             success: true,
-            result: response,
+            analytics: analytics,
         })
     } catch (err) {
         console.error('resource-analytics error:', err)
@@ -372,30 +314,24 @@ app.get('/resource-analytics', async (req, res) => {
 app.patch('/learning-path/:id', async (req, res) => {
     try {
         const { id } = req.params
-        const { updates, userId } = req.body || {}
+        const { updates } = req.body || {}
 
         if (!updates) {
             return res.status(400).json({ error: 'Updates data is required' })
         }
 
-        console.log('Server: updating learning path:', id)
+        console.log('Server: updating learning path using direct storage:', id)
 
-        const { runner } = await createLearningPathStorageAgent(userId)
+        const result = await directStorage.updateLearningPath(id, updates)
 
-        const instruction = `Update learning path ${id} with these changes:
-${JSON.stringify(updates, null, 2)}
+        if (!result.success) {
+            return res.status(404).json(result)
+        }
 
-Use the update_learning_path tool to apply these updates.`
-
-        const response = await runner.ask(instruction)
-
-        console.log('Server: learning path updated')
+        console.log('Server: learning path updated successfully')
 
         res.setHeader('Content-Type', 'application/json')
-        return res.status(200).json({
-            success: true,
-            result: response,
-        })
+        return res.status(200).json(result)
     } catch (err) {
         console.error('update-learning-path error:', err)
         return res.status(500).json({ error: err?.message || String(err) })

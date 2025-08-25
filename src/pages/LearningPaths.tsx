@@ -284,10 +284,63 @@ export default function LearningPaths() {
     }
 
     const calculateDuration = (curriculum) => {
-        if (!curriculum?.modules) return '2-3 hours'
-        const moduleCount = curriculum.modules.length
-        const estimatedHours = Math.max(1, Math.ceil(moduleCount * 0.5))
-        return `${estimatedHours}-${estimatedHours + 1} hours`
+        if (!curriculum?.modules) return '2 hours'
+
+        // First check if totalDuration is available and use it
+        if (curriculum.totalDuration) {
+            const totalDurationStr = curriculum.totalDuration.toString()
+
+            // Handle formats like "2 weeks (~20 hours)" or "72 hours"
+            const hoursInParenMatch =
+                totalDurationStr.match(/\(~?(\d+)\s*hours?\)/i)
+            if (hoursInParenMatch) {
+                const hours = parseInt(hoursInParenMatch[1])
+                return hours === 1 ? '1 hour' : `${hours} hours`
+            }
+
+            // Handle direct hours format like "72 hours"
+            const directHoursMatch = totalDurationStr.match(/^(\d+)\s*hours?$/i)
+            if (directHoursMatch) {
+                return curriculum.totalDuration
+            }
+
+            // Handle weeks format like "2 weeks"
+            const weeksMatch = totalDurationStr.match(/(\d+)\s*weeks?/i)
+            if (weeksMatch) {
+                const weeks = parseInt(weeksMatch[1])
+                const estimatedHours = weeks * 10 // Rough estimate: 10 hours per week
+                return `${estimatedHours} hours`
+            }
+
+            // If we can't parse it, return as-is
+            return curriculum.totalDuration
+        }
+
+        // Calculate based on actual module durations if available
+        let totalMinutes = 0
+        curriculum.modules.forEach((module) => {
+            if (module.duration) {
+                // Parse duration string like "10 hours" or "30 min"
+                const durationStr = module.duration.toString()
+                const hoursMatch = durationStr.match(/(\d+)\s*hours?/i)
+                const minutesMatch = durationStr.match(/(\d+)\s*min/i)
+
+                if (hoursMatch) {
+                    totalMinutes += parseInt(hoursMatch[1]) * 60
+                } else if (minutesMatch) {
+                    totalMinutes += parseInt(minutesMatch[1])
+                } else {
+                    // Fallback: try to parse as number and assume minutes
+                    const duration = parseInt(durationStr) || 30
+                    totalMinutes += duration
+                }
+            } else {
+                totalMinutes += 30 // Default 30 min per module
+            }
+        })
+
+        const hours = Math.max(1, Math.ceil(totalMinutes / 60))
+        return hours === 1 ? '1 hour' : `${hours} hours`
     }
 
     const refreshPaths = async () => {
@@ -308,7 +361,27 @@ export default function LearningPaths() {
         learningPaths.filter((p) => p.status === 'completed').length
     const getTotalHours = () => {
         return learningPaths.reduce((total, path) => {
-            const hours = parseInt(path.duration.split('-')[0]) || 2
+            // Handle duration formats like "72 hours", "20 hours", "2 weeks (~20 hours)"
+            if (!path.duration) return total
+
+            const durationStr = path.duration.toString()
+
+            // First try to extract hours from parentheses like "(~20 hours)"
+            const hoursInParenMatch = durationStr.match(/\(~?(\d+)\s*hours?\)/i)
+            if (hoursInParenMatch) {
+                return total + parseInt(hoursInParenMatch[1])
+            }
+
+            // Then try direct hours match like "72 hours"
+            const hoursMatch = durationStr.match(/(\d+)\s*hours?/i)
+            if (hoursMatch) {
+                return total + parseInt(hoursMatch[1])
+            }
+
+            // Fallback: get first number
+            const numberMatch = durationStr.match(/(\d+)/)
+            const hours = numberMatch ? parseInt(numberMatch[1]) : 2
+
             return total + hours
         }, 0)
     }
@@ -413,26 +486,37 @@ export default function LearningPaths() {
     }
 
     const getActionButton = (path: LearningPath) => {
+        const pathSlug = path.title
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/(^-|-$)/g, '')
+
         switch (path.status) {
             case 'completed':
                 return (
-                    <Button variant='outline' size='sm'>
-                        <Star className='w-4 h-4 mr-2' />
-                        Review
+                    <Button variant='outline' size='sm' asChild>
+                        <Link to={`/dashboard/paths/${pathSlug}`}>
+                            <Star className='w-4 h-4 mr-2' />
+                            Review
+                        </Link>
                     </Button>
                 )
             case 'active':
                 return (
-                    <Button size='sm'>
-                        <PlayCircle className='w-4 h-4 mr-2' />
-                        Continue
+                    <Button size='sm' asChild>
+                        <Link to={`/dashboard/paths/${pathSlug}`}>
+                            <PlayCircle className='w-4 h-4 mr-2' />
+                            Continue
+                        </Link>
                     </Button>
                 )
             case 'not_started':
                 return (
-                    <Button variant='outline' size='sm'>
-                        <PlayCircle className='w-4 h-4 mr-2' />
-                        Start Learning
+                    <Button variant='outline' size='sm' asChild>
+                        <Link to={`/dashboard/paths/${pathSlug}`}>
+                            <PlayCircle className='w-4 h-4 mr-2' />
+                            Start Learning
+                        </Link>
                     </Button>
                 )
             default:
