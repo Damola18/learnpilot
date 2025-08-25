@@ -57,16 +57,7 @@ export default function Index() {
                   size="lg" 
                   className="bg-foreground text-background hover:bg-foreground/90 px-8 py-4 text-lg font-medium rounded-full"
                 >
-                  Get Started — It's Free
-                </Button>
-              </Link>
-              <Link to="/register">
-                <Button 
-                  variant="outline" 
-                  size="lg" 
-                  className="px-8 py-4 text-lg font-medium rounded-full border-2"
-                >
-                  Download — Mobile App
+                  Get Started
                 </Button>
               </Link>
             </div>
@@ -304,7 +295,7 @@ export default function Index() {
             </nav>
             
             <p className="text-muted-foreground text-sm">
-              © 2024 LearnPilot. All rights reserved.
+              © {new Date().getFullYear()} LearnPilot. All rights reserved.
             </p>
           </div>
         </div>

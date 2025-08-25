@@ -536,26 +536,29 @@ export default function LearningPaths() {
                         Continue your learning journey or explore new paths
                     </p>
                 </div>
-                <Button asChild size='lg' className='shadow-learning'>
-                    <Link to='/dashboard/create-path'>
-                        <Plus className='w-4 h-4 mr-2' />
-                        Create New Path
-                    </Link>
-                </Button>
-                <Button
-                    variant='outline'
-                    size='lg'
-                    onClick={refreshPaths}
-                    disabled={isRefreshing}
-                    className='shadow-card'
-                >
-                    <RefreshCw
-                        className={`w-4 h-4 mr-2 ${
-                            isRefreshing ? 'animate-spin' : ''
-                        }`}
-                    />
-                    Refresh
-                </Button>
+                <div className='flex gap-3'>
+                    <Button asChild size='lg' className='shadow-learning'>
+                        <Link to='/dashboard/create-path'>
+                            <Plus className='w-4 h-4 mr-2' />
+                            Create New Path
+                        </Link>
+                    </Button>
+                    <Button
+                        variant='outline'
+                        size='lg'
+                        onClick={refreshPaths}
+                        disabled={isRefreshing}
+                        className='shadow-card'
+                    >
+                        <RefreshCw
+                            className={`w-4 h-4 mr-2 ${
+                                isRefreshing ? 'animate-spin' : ''
+                            }`}
+                        />
+                        Refresh
+                    </Button>
+                </div>
+                
             </div>
 
             {/* Quick Stats */}

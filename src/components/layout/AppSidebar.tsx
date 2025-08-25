@@ -124,35 +124,13 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
-        {/* Progress Overview */}
-        {!collapsed && (
-          <SidebarGroup>
-            <SidebarGroupLabel className="px-3 text-sidebar-foreground/60">
-              Weekly Progress
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <div className="px-3 py-2 space-y-3">
-                <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-warning" />
-                  <span className="text-sm font-medium">12h 30m</span>
-                  <span className="text-xs text-muted-foreground">/ 15h</span>
-                </div>
-                <Progress value={83} className="h-2" />
-                <p className="text-xs text-muted-foreground">
-                  Great progress! You're 83% to your weekly goal.
-                </p>
-              </div>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
       </SidebarContent>
 
       <SidebarFooter className="p-4 border-t border-sidebar-border">
         <SidebarMenuItem>
           <SidebarMenuButton asChild className="h-11">
             <NavLink
-              to="/settings"
+              to="/dashboard/settings"
               className={`flex items-center gap-3 px-3 rounded-lg transition-all ${getNavClass(
                 "/settings"
               )}`}

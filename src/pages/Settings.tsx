@@ -1,405 +1,277 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
-import { 
-  Settings as SettingsIcon, 
-  User, 
-  Bell, 
-  Shield, 
-  Palette, 
-  Globe,
-  Moon,
-  Sun,
-  Monitor,
-  Mail,
-  Smartphone,
-  Volume2
-} from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { User, Shuffle, Mail, MapPin, Calendar, Edit, Pen } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Settings = () => {
-  const [theme, setTheme] = useState("light");
-  const [language, setLanguage] = useState("en");
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [pushNotifications, setPushNotifications] = useState(true);
-  const [soundEnabled, setSoundEnabled] = useState(false);
+  const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    bio: '',
+    learningGoal: 'career'
+  });
+  const [avatarSeed, setAvatarSeed] = useState('');
+
+
+  const userData = {
+    name: user?.user_metadata?.name || user?.user_metadata?.firstName + ' ' + user?.user_metadata?.lastName || "User",
+    email: user?.email || "", 
+    joinDate: user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long' 
+    }) : "Unknown",
+  };
+
+
+  const stats = {
+    totalHours: 124.5,
+    completedPaths: 3,
+    currentStreak: 15,
+    totalBadges: 8,
+    skillPoints: 2850,
+  };
+
+  const generateAvatarUrl = (seed: string) => {
+    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`;
+  };
+
+
+  useEffect(() => {
+    if (user) {
+      const metadata = user.user_metadata || {};
+      setFormData({
+        firstName: metadata.firstName || metadata.name?.split(' ')[0] || '',
+        lastName: metadata.lastName || metadata.name?.split(' ')[1] || '',
+        email: user.email || '',
+        bio: metadata.bio || '',
+        learningGoal: metadata.learningGoal || 'career'
+      });
+      setAvatarSeed(metadata.avatarSeed || user.email || 'default');
+    }
+  }, [user]);
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const generateNewAvatar = () => {
+    const newSeed = Math.random().toString(36).substring(7);
+    setAvatarSeed(newSeed);
+  };
+
+  const handleSaveChanges = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          name: `${formData.firstName} ${formData.lastName}`.trim(),
+          bio: formData.bio,
+          learningGoal: formData.learningGoal,
+          avatarSeed: avatarSeed
+        }
+      });
+
+      if (error) {
+        toast.error('Failed to update profile: ' + error.message);
+      } else {
+        toast.success('Profile updated successfully!');
+      }
+    } catch (error) {
+      toast.error('An unexpected error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="p-8 space-y-8">
       <div>
         <h1 className="text-3xl font-satoshi font-bold text-foreground">Settings</h1>
-        <p className="text-muted-foreground mt-2">Manage your account preferences and application settings</p>
+        <p className="text-muted-foreground mt-2">Manage your profile information and view your learning progress</p>
       </div>
 
-      <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="profile" className="flex items-center gap-2">
-            <User className="h-4 w-4" />
-            Profile
-          </TabsTrigger>
-          <TabsTrigger value="notifications" className="flex items-center gap-2">
-            <Bell className="h-4 w-4" />
-            Notifications
-          </TabsTrigger>
-          <TabsTrigger value="appearance" className="flex items-center gap-2">
-            <Palette className="h-4 w-4" />
-            Appearance
-          </TabsTrigger>
-          <TabsTrigger value="privacy" className="flex items-center gap-2">
-            <Shield className="h-4 w-4" />
-            Privacy
-          </TabsTrigger>
-          <TabsTrigger value="general" className="flex items-center gap-2">
-            <SettingsIcon className="h-4 w-4" />
-            General
-          </TabsTrigger>
-        </TabsList>
+      {/* User Data and Stats Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Your Profile Overview</CardTitle>
+          <CardDescription>Real-time view of your profile and learning statistics</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Avatar and Basic Info */}
+          <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
+            <div className="flex flex-col items-center gap-4">
+              <Avatar className="w-20 h-20">
+                <AvatarImage 
+                  src={generateAvatarUrl(avatarSeed)} 
+                  alt="Profile Avatar" 
+                />
+                <AvatarFallback className="text-lg font-semibold">
+                  {userData.name.split(' ').map(n => n[0]).join('')}
+                </AvatarFallback>
+              </Avatar>
+            </div>
 
-        <TabsContent value="profile" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Profile Information</CardTitle>
-              <CardDescription>Update your personal information and preferences</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input id="firstName" placeholder="Enter your first name" defaultValue="Damola" />
+            <div className="flex-1 space-y-4 text-center md:text-left">
+              <div>
+                <h2 className="text-2xl font-bold">{userData.name}</h2>
+                <p className="text-muted-foreground">{formData.bio || "No bio available"}</p>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-4 text-sm text-muted-foreground justify-center md:justify-start">
+                <div className="flex items-center gap-1">
+                  <Mail className="h-4 w-4" />
+                  {userData.email}
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input id="lastName" placeholder="Enter your last name" defaultValue="Doe" />
+                <div className="flex items-center gap-1">
+                  <Calendar className="h-4 w-4" />
+                  Joined {userData.joinDate}
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <Input id="email" type="email" placeholder="Enter your email" defaultValue="damola@example.com" />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="bio">Bio</Label>
-                <Input id="bio" placeholder="Tell us about yourself" defaultValue="Passionate learner exploring new technologies" />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="timezone">Timezone</Label>
-                  <Select defaultValue="utc-5">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select timezone" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="utc-8">Pacific Time (UTC-8)</SelectItem>
-                      <SelectItem value="utc-5">Eastern Time (UTC-5)</SelectItem>
-                      <SelectItem value="utc+0">GMT (UTC+0)</SelectItem>
-                      <SelectItem value="utc+1">Central European (UTC+1)</SelectItem>
-                    </SelectContent>
-                  </Select>
+              {/* Learning Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="text-center p-3 rounded-lg bg-primary/5">
+                  <div className="text-lg font-bold text-primary">{stats.totalHours}h</div>
+                  <div className="text-xs text-muted-foreground">Learning Time</div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="learningGoal">Learning Goal</Label>
-                  <Select defaultValue="career">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select your goal" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="career">Career Advancement</SelectItem>
-                      <SelectItem value="hobby">Personal Interest</SelectItem>
-                      <SelectItem value="education">Academic Requirements</SelectItem>
-                      <SelectItem value="certification">Certification</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="text-center p-3 rounded-lg bg-green-500/5">
+                  <div className="text-lg font-bold text-green-600">{stats.completedPaths}</div>
+                  <div className="text-xs text-muted-foreground">Completed Paths</div>
+                </div>
+                <div className="text-center p-3 rounded-lg bg-orange-500/5">
+                  <div className="text-lg font-bold text-orange-600">{stats.currentStreak}</div>
+                  <div className="text-xs text-muted-foreground">Day Streak</div>
+                </div>
+                <div className="text-center p-3 rounded-lg bg-accent">
+                  <div className="text-lg font-bold">{stats.totalBadges}</div>
+                  <div className="text-xs text-muted-foreground">Badges</div>
                 </div>
               </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-              <div className="flex justify-end">
-                <Button>Save Changes</Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+      {/* Profile Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <User className="h-5 w-5" />
+            Edit Profile Information
+          </CardTitle>
+          <CardDescription>Update your personal information and preferences</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Profile Avatar Section */}
+          <div className="flex items-center gap-6">
+            <div className="relative">
+              <Avatar className="w-24 h-24">
+                <AvatarImage 
+                  src={generateAvatarUrl(avatarSeed)} 
+                  alt="Profile Avatar" 
+                />
+                <AvatarFallback className="text-lg font-semibold">
+                  {formData.firstName[0]}{formData.lastName[0]}
+                </AvatarFallback>
+              </Avatar>
+             
+              <Button
+                size="sm"
+                variant="outline"
+                className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full p-0 bg-background border-2 border-background shadow-md hover:bg-accent"
+                onClick={generateNewAvatar}
+              >
+                <Pen className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+      
 
-        <TabsContent value="notifications" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Notification Preferences</CardTitle>
-              <CardDescription>Choose how you want to be notified about your learning progress</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Mail className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <Label className="text-base">Email Notifications</Label>
-                      <p className="text-sm text-muted-foreground">Receive updates via email</p>
-                    </div>
-                  </div>
-                  <Switch 
-                    checked={emailNotifications} 
-                    onCheckedChange={setEmailNotifications}
-                  />
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="firstName">First Name</Label>
+              <Input 
+                id="firstName" 
+                placeholder="Enter your first name" 
+                value={formData.firstName}
+                onChange={(e) => handleInputChange('firstName', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Last Name</Label>
+              <Input 
+                id="lastName" 
+                placeholder="Enter your last name" 
+                value={formData.lastName}
+                onChange={(e) => handleInputChange('lastName', e.target.value)}
+              />
+            </div>
+          </div>
 
-                <Separator />
+          <div className="space-y-2">
+            <Label htmlFor="email">Email Address</Label>
+            <Input 
+              id="email" 
+              type="email" 
+              placeholder="Enter your email" 
+              value={formData.email}
+              disabled
+              className="bg-muted"
+            />
+            <p className="text-sm text-muted-foreground">
+              Email cannot be changed from this page
+            </p>
+          </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Smartphone className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <Label className="text-base">Push Notifications</Label>
-                      <p className="text-sm text-muted-foreground">Get notifications on your device</p>
-                    </div>
-                  </div>
-                  <Switch 
-                    checked={pushNotifications} 
-                    onCheckedChange={setPushNotifications}
-                  />
-                </div>
+          <div className="space-y-2">
+            <Label htmlFor="bio">Bio</Label>
+            <Input 
+              id="bio" 
+              placeholder="Tell us about yourself" 
+              value={formData.bio}
+              onChange={(e) => handleInputChange('bio', e.target.value)}
+            />
+          </div>
 
-                <Separator />
+          <div className="space-y-2">
+            <Label htmlFor="learningGoal">Learning Goal</Label>
+            <Select 
+              value={formData.learningGoal} 
+              onValueChange={(value) => handleInputChange('learningGoal', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select your goal" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="career">Career Advancement</SelectItem>
+                <SelectItem value="hobby">Personal Interest</SelectItem>
+                <SelectItem value="education">Academic Requirements</SelectItem>
+                <SelectItem value="certification">Certification</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Volume2 className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <Label className="text-base">Sound Notifications</Label>
-                      <p className="text-sm text-muted-foreground">Play sounds for notifications</p>
-                    </div>
-                  </div>
-                  <Switch 
-                    checked={soundEnabled} 
-                    onCheckedChange={setSoundEnabled}
-                  />
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <h4 className="font-medium">Email Frequency</h4>
-                <Select defaultValue="daily">
-                  <SelectTrigger className="w-full md:w-[200px]">
-                    <SelectValue placeholder="Select frequency" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="immediate">Immediate</SelectItem>
-                    <SelectItem value="daily">Daily Digest</SelectItem>
-                    <SelectItem value="weekly">Weekly Summary</SelectItem>
-                    <SelectItem value="never">Never</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="appearance" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Appearance Settings</CardTitle>
-              <CardDescription>Customize the look and feel of your learning environment</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-base">Theme</Label>
-                  <p className="text-sm text-muted-foreground mb-3">Choose your preferred color scheme</p>
-                  <div className="grid grid-cols-3 gap-3 max-w-md">
-                    <div 
-                      className={`p-3 rounded-lg border cursor-pointer transition-colors ${theme === 'light' ? 'border-primary bg-primary/5' : 'border-border'}`}
-                      onClick={() => setTheme('light')}
-                    >
-                      <div className="flex items-center gap-2">
-                        <Sun className="h-4 w-4" />
-                        <span className="text-sm">Light</span>
-                      </div>
-                    </div>
-                    <div 
-                      className={`p-3 rounded-lg border cursor-pointer transition-colors ${theme === 'dark' ? 'border-primary bg-primary/5' : 'border-border'}`}
-                      onClick={() => setTheme('dark')}
-                    >
-                      <div className="flex items-center gap-2">
-                        <Moon className="h-4 w-4" />
-                        <span className="text-sm">Dark</span>
-                      </div>
-                    </div>
-                    <div 
-                      className={`p-3 rounded-lg border cursor-pointer transition-colors ${theme === 'system' ? 'border-primary bg-primary/5' : 'border-border'}`}
-                      onClick={() => setTheme('system')}
-                    >
-                      <div className="flex items-center gap-2">
-                        <Monitor className="h-4 w-4" />
-                        <span className="text-sm">System</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-3">
-                  <Label className="text-base">Font Size</Label>
-                  <Select defaultValue="medium">
-                    <SelectTrigger className="w-full md:w-[200px]">
-                      <SelectValue placeholder="Select font size" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="small">Small</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="large">Large</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-3">
-                  <Label className="text-base">Sidebar Behavior</Label>
-                  <Select defaultValue="auto">
-                    <SelectTrigger className="w-full md:w-[200px]">
-                      <SelectValue placeholder="Select behavior" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="auto">Auto-collapse</SelectItem>
-                      <SelectItem value="expanded">Always Expanded</SelectItem>
-                      <SelectItem value="minimal">Minimal</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="privacy" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Privacy & Security</CardTitle>
-              <CardDescription>Manage your privacy settings and security preferences</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-base">Profile Visibility</Label>
-                    <p className="text-sm text-muted-foreground">Make your learning progress visible to others</p>
-                  </div>
-                  <Switch defaultChecked={false} />
-                </div>
-
-                <Separator />
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-base">Share Learning Data</Label>
-                    <p className="text-sm text-muted-foreground">Help improve the platform with anonymous usage data</p>
-                  </div>
-                  <Switch defaultChecked={true} />
-                </div>
-
-                <Separator />
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-base">Marketing Communications</Label>
-                    <p className="text-sm text-muted-foreground">Receive tips and updates about new features</p>
-                  </div>
-                  <Switch defaultChecked={false} />
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <h4 className="font-medium">Account Actions</h4>
-                <div className="space-y-3">
-                  <Button variant="outline" className="w-full md:w-auto">
-                    Change Password
-                  </Button>
-                  <Button variant="outline" className="w-full md:w-auto">
-                    Download My Data
-                  </Button>
-                  <Button variant="destructive" className="w-full md:w-auto">
-                    Delete Account
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="general" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>General Settings</CardTitle>
-              <CardDescription>Configure general application preferences</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="language">Language</Label>
-                  <Select value={language} onValueChange={setLanguage}>
-                    <SelectTrigger className="w-full md:w-[200px]">
-                      <SelectValue placeholder="Select language" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="es">Español</SelectItem>
-                      <SelectItem value="fr">Français</SelectItem>
-                      <SelectItem value="de">Deutsch</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-2">
-                  <Label htmlFor="autoSave">Auto-save Frequency</Label>
-                  <Select defaultValue="30">
-                    <SelectTrigger className="w-full md:w-[200px]">
-                      <SelectValue placeholder="Select frequency" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="10">Every 10 seconds</SelectItem>
-                      <SelectItem value="30">Every 30 seconds</SelectItem>
-                      <SelectItem value="60">Every minute</SelectItem>
-                      <SelectItem value="300">Every 5 minutes</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Separator />
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-base">Offline Mode</Label>
-                    <p className="text-sm text-muted-foreground">Download content for offline learning</p>
-                  </div>
-                  <Switch defaultChecked={false} />
-                </div>
-
-                <Separator />
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-base">Advanced Analytics</Label>
-                    <p className="text-sm text-muted-foreground">Enable detailed learning analytics</p>
-                  </div>
-                  <Switch defaultChecked={true} />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          <div className="flex justify-end">
+            <Button onClick={handleSaveChanges} disabled={isLoading}>
+              {isLoading ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
