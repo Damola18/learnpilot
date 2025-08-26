@@ -1,8 +1,8 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { GeneratedLearningPath } from "@/services/iqaiCurriculumService";
+import { GeneratedLearningPath, iqaiCurriculumService } from "@/services/iqaiCurriculumService";
 import { parseDurationToHours } from "@/utils/durationUtils";
 
-interface LearningPath {
+export interface LearningPath {
   id: string;
   title: string;
   description: string;
@@ -75,12 +75,42 @@ const generateTags = (domain: string, experienceLevel: string): string[] => {
 };
 
 export function LearningPathsProvider({ children }: { children: ReactNode }) {
-  const [paths, setPaths] = useState<LearningPath[]>(() => {
+  const [paths, setPaths] = useState<LearningPath[]>([]);
 
-    const saved = localStorage.getItem('learningPaths');
-    return saved ? JSON.parse(saved) : [];
-  });
+  // Load paths from server on mount
+  useEffect(() => {
+    const loadPaths = async () => {
+      try {
+        const response = await iqaiCurriculumService.getStoredLearningPaths();
+        if (response && response.paths) {
+          const formattedPaths = response.paths.map((path: any) => ({
+            id: path.id,
+            title: path.title,
+            description: path.description,
+            progress: 0,
+            totalModules: path.curriculum?.modules?.length || 0,
+            completedModules: 0,
+            difficulty: path.difficulty || 'Intermediate',
+            estimatedTime: calculateDuration(path.curriculum),
+            category: path.domain || 'General',
+            status: path.status || 'not_started',
+            rating: 4.5,
+            enrollments: 1,
+            color: difficultyColors[path.difficulty || 'Intermediate'],
+            tags: path.curriculum?.tags || [],
+            lastAccessed: path.updated_at ? new Date(path.updated_at).toISOString() : 'Never',
+            createdAt: path.created_at ? new Date(path.created_at).toISOString() : new Date().toISOString(),
+            generatedPath: path.curriculum
+          }));
+          setPaths(formattedPaths);
+        }
+      } catch (error) {
+        console.error('Error loading paths:', error);
+      }
+    };
 
+    loadPaths();
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('learningPaths', JSON.stringify(paths));
@@ -158,3 +188,54 @@ export function useLearningPaths() {
   }
   return context;
 }
+
+const calculateDuration = (curriculum: any): string => {
+  if (!curriculum?.modules) return '2 hours';
+
+  if (curriculum.totalDuration) {
+    const totalDurationStr = curriculum.totalDuration.toString();
+
+    const hoursInParenMatch = totalDurationStr.match(/\(~?(\d+)\s*hours?\)/i);
+    if (hoursInParenMatch) {
+      const hours = parseInt(hoursInParenMatch[1]);
+      return hours === 1 ? '1 hour' : `${hours} hours`;
+    }
+
+    const directHoursMatch = totalDurationStr.match(/^(\d+)\s*hours?$/i);
+    if (directHoursMatch) {
+      return curriculum.totalDuration;
+    }
+
+    const weeksMatch = totalDurationStr.match(/(\d+)\s*weeks?/i);
+    if (weeksMatch) {
+      const weeks = parseInt(weeksMatch[1]);
+      const estimatedHours = weeks * 10; 
+      return `${estimatedHours} hours`;
+    }
+
+    return curriculum.totalDuration;
+  }
+
+  let totalMinutes = 0;
+  curriculum.modules.forEach((module: any) => {
+    if (module.duration) {
+      const durationStr = module.duration.toString();
+      const hoursMatch = durationStr.match(/(\d+)\s*hours?/i);
+      const minutesMatch = durationStr.match(/(\d+)\s*min/i);
+
+      if (hoursMatch) {
+        totalMinutes += parseInt(hoursMatch[1]) * 60;
+      } else if (minutesMatch) {
+        totalMinutes += parseInt(minutesMatch[1]);
+      } else {
+        const duration = parseInt(durationStr) || 30;
+        totalMinutes += duration;
+      }
+    } else {
+      totalMinutes += 30;
+    }
+  });
+
+  const hours = Math.max(1, Math.ceil(totalMinutes / 60));
+  return hours === 1 ? '1 hour' : `${hours} hours`;
+};
