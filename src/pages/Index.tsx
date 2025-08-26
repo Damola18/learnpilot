@@ -43,20 +43,22 @@ export default function Index() {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border/40 bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
               <GraduationCap className="w-6 h-6 dark:text-white text-white" />
             </div>
             <span className="font-satoshi font-bold text-xl">LearnPilot</span>
-          </div>
+          </Link>
+
 
           <nav className="hidden md:flex items-center gap-8">
+            <a href="#how-it-works" className="text-muted-foreground hover:text-primary transition-colors">
+              How it Works 
+            </a>
             <a href="#features" className="text-muted-foreground hover:text-primary transition-colors">
               Features
             </a>
-            <a href="#how-it-works" className="text-muted-foreground hover:text-primary transition-colors">
-              How it Works
-            </a>
+           
             <a href="#about" className="text-muted-foreground hover:text-primary transition-colors">
               About
             </a>
@@ -480,17 +482,19 @@ export default function Index() {
       <footer className="border-t border-border/40 py-12 bg-muted/20">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center gap-2 mb-4 md:mb-0">
-              <Brain className="w-6 h-6 text-primary" />
-              <span className="font-satoshi font-bold text-lg">LearnPilot</span>
-            </div>
+            <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+              <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
+                <GraduationCap className="w-6 h-6 dark:text-white text-white" />
+              </div>
+              <span className="font-satoshi font-bold text-xl">LearnPilot</span>
+            </Link>
 
             <nav className="flex gap-6 mb-4 md:mb-0">
-              <a href="#features" className="text-muted-foreground hover:text-primary transition-colors">
-                Features
-              </a>
               <a href="#how-it-works" className="text-muted-foreground hover:text-primary transition-colors">
                 How it Works
+              </a>
+              <a href="#features" className="text-muted-foreground hover:text-primary transition-colors">
+                Features
               </a>
               <a href="#about" className="text-muted-foreground hover:text-primary transition-colors">
                 About
@@ -504,7 +508,7 @@ export default function Index() {
             </nav>
 
             <p className="text-muted-foreground text-sm">
-              © 2024 LearnPilot. All rights reserved.
+              © 2025 LearnPilot. All rights reserved.
             </p>
 
           </div>

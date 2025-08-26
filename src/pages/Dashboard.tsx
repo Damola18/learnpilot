@@ -226,7 +226,6 @@ export default function Dashboard() {
                   <div className="flex items-start justify-between mb-6">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <div className={`w-3 h-3 rounded-full ${path.color}`} />
                         <h3 className="font-semibold text-xl text-card-foreground group-hover:text-primary transition-colors">
                           {path.title}
                         </h3>

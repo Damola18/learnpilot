@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import {
   Home,
   BookOpen,
@@ -56,19 +56,19 @@ export function AppSidebar() {
   return (
     <Sidebar className={collapsed ? "w-16" : "w-64"} collapsible="icon">
       <SidebarHeader className="p-4 border-b border-sidebar-border">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-            <GraduationCap className="w-6 h-6 dark:text-white text-white" />
-          </div>
-          {!collapsed && (
-            <div>
-              <h1 className="text-lg font-bold text-sidebar-foreground">
-                LearnPilot
-              </h1>
-            </div>
-          )}
+      <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+        <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
+          <GraduationCap className="w-6 h-6 dark:text-white text-white" />
         </div>
-      </SidebarHeader>
+        {!collapsed && (
+          <div>
+            <h1 className="text-lg font-bold text-sidebar-foreground">
+              LearnPilot
+            </h1>
+          </div>
+        )}
+      </Link>
+    </SidebarHeader>
 
       <SidebarContent className="px-2">
         <SidebarGroup>
