@@ -163,45 +163,46 @@ export default function LearningPaths() {
                     )
 
                     // Debug localStorage and progress data
-                    console.log('=== PATH PROGRESS DEBUG ===', {
-                        pathTitle: path.title,
-                        pathId: path.id,
-                        pathSlug,
-                        progress,
-                        completed,
-                        localStorageKey: `${path.id}-${pathSlug}`,
-                    })
+                    // console.log('=== PATH PROGRESS DEBUG ===', {
+                    //     pathTitle: path.title,
+                    //     pathId: path.id,
+                    //     pathSlug,
+                    //     progress,
+                    //     completed,
+                    //     localStorageKey: `${path.id}-${pathSlug}`,
+                    // })
 
                     // Check what's in localStorage
                     const savedProgresses =
                         localStorage.getItem('pathProgresses')
                     if (savedProgresses) {
                         const parsed = JSON.parse(savedProgresses)
-                        console.log('All saved progresses:', parsed)
+                        // console.log('All saved progresses:', parsed)
                         const thisPathProgress =
                             parsed[`${path.id}-${pathSlug}`]
-                        console.log('This path progress:', thisPathProgress)
+                        // console.log('This path progress:', thisPathProgress)
                     }
 
                     // Calculate completed modules (not just completed items)
                     let completedModuleCount = 0
                     if (path.curriculum?.modules) {
                         const pathProgress = getPathProgress(path.id, pathSlug)
-                        console.log(
-                            'Module completion debug for:',
-                            path.title,
-                            {
-                                pathId: path.id,
-                                pathSlug,
-                                hasPathProgress: !!pathProgress,
-                                progressItems: pathProgress
-                                    ? Object.keys(pathProgress.items)
-                                    : [],
-                                modulesCount: path.curriculum.modules.length,
-                            },
-                        )
+                        // console.log(
+                        //     'Module completion debug for:',
+                        //     path.title,
+                        //     {
+                        //         pathId: path.id,
+                        //         pathSlug,
+                        //         hasPathProgress: !!pathProgress,
+                        //         progressItems: pathProgress
+                        //             ? Object.keys(pathProgress.items)
+                        //             : [],
+                        //         modulesCount: path.curriculum.modules.length,
+                        //     },
+                        // )
 
                         if (pathProgress) {
+                            
                             completedModuleCount =
                                 path.curriculum.modules.filter(
                                     (module, index) => {
@@ -225,30 +226,30 @@ export default function LearningPaths() {
                                             ),
                                         ]
 
-                                        console.log(
-                                            `Module ${index} (${module.title}) debug:`,
-                                            {
-                                                sectionId,
-                                                moduleItems,
-                                                hasCompetencies: (
-                                                    module.competencies || []
-                                                ).length,
-                                                hasResources: (
-                                                    module.resources || []
-                                                ).length,
-                                                hasAssessments: (
-                                                    module.assessments || []
-                                                ).length,
-                                                itemStatuses: moduleItems.map(
-                                                    (itemId) => ({
-                                                        itemId,
-                                                        status: pathProgress
-                                                            .items[itemId]
-                                                            ?.status,
-                                                    }),
-                                                ),
-                                            },
-                                        )
+                                        // console.log(
+                                        //     `Module ${index} (${module.title}) debug:`,
+                                        //     {
+                                        //         sectionId,
+                                        //         moduleItems,
+                                        //         hasCompetencies: (
+                                        //             module.competencies || []
+                                        //         ).length,
+                                        //         hasResources: (
+                                        //             module.resources || []
+                                        //         ).length,
+                                        //         hasAssessments: (
+                                        //             module.assessments || []
+                                        //         ).length,
+                                        //         itemStatuses: moduleItems.map(
+                                        //             (itemId) => ({
+                                        //                 itemId,
+                                        //                 status: pathProgress
+                                        //                     .items[itemId]
+                                        //                     ?.status,
+                                        //             }),
+                                        //         ),
+                                        //     },
+                                        // )
 
                                         // Module is completed if it has items and all are done
                                         if (moduleItems.length === 0) {
@@ -276,6 +277,8 @@ export default function LearningPaths() {
                                         return allDone
                                     },
                                 ).length
+
+                            console.log('*********************',completedModuleCount,'************')
                         }
 
                         console.log(
@@ -441,6 +444,7 @@ export default function LearningPaths() {
     }
 
     const filteredPaths = learningPaths.filter((path) => {
+
         const matchesSearch =
             path.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
             path.description.toLowerCase().includes(searchTerm.toLowerCase()) ||

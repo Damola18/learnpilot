@@ -6,6 +6,7 @@ import {
     ReactNode,
 } from 'react'
 import { iqaiCurriculumService } from '@/services/iqaiCurriculumService'
+import path from 'path'
 
 interface PathItemProgress {
     id: string
@@ -103,7 +104,7 @@ export function PathProgressProvider({ children }: { children: ReactNode }) {
                     [key]: serverProgress,
                 }))
 
-                console.log('Progress loaded from server successfully')
+                // console.log('Progress loaded from server successfully')
             }
         } catch (error) {
             console.error('Failed to load progress from server:', error)

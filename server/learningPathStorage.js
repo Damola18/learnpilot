@@ -16,7 +16,6 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 const APP_NAME = 'learning-path-storage'
-const USER_ID = uuidv4()
 
 // Helper function to get SQLite connection string
 // function getSqliteConnectionString(dbName) {

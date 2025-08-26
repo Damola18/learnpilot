@@ -97,7 +97,7 @@ export default function Dashboard() {
     getCompletedPaths,
   } = useLearningPaths() 
 
-  console.log("paths", paths)
+//   console.log("paths", paths)
 
   const greeting =
     currentTime.getHours() < 12

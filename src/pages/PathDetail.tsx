@@ -95,7 +95,7 @@ export default function PathDetail() {
 
             try {
                 // First, load all paths from the server
-                console.log('Loading paths from server...')
+                // console.log('Loading paths from server...')
                 const response =
                     await iqaiCurriculumService.getStoredLearningPaths()
 
@@ -105,7 +105,7 @@ export default function PathDetail() {
                     return
                 }
 
-                console.log('Loaded paths from server:', response.paths.length)
+                // console.log('Loaded paths from server:', response.paths.length)
                 setServerPaths(response.paths)
 
                 // Find the matching path by slug
@@ -114,11 +114,11 @@ export default function PathDetail() {
                         .toLowerCase()
                         .replace(/[^a-z0-9]+/g, '-')
                         .replace(/(^-|-$)/g, '')
-                    console.log('Comparing slugs:', {
-                        pathSlug,
-                        generatedSlug,
-                        title: path.title,
-                    })
+                    // console.log('Comparing slugs:', {
+                    //     pathSlug,
+                    //     generatedSlug,
+                    //     title: path.title,
+                    // })
                     return generatedSlug === pathSlug
                 })
 
@@ -128,7 +128,7 @@ export default function PathDetail() {
                     return
                 }
 
-                console.log('Found matching path:', matchingPath)
+                // console.log('Found matching path:', matchingPath)
 
                 // Load progress from server first
                 await loadProgressFromServer(matchingPath.id, pathSlug)
@@ -219,12 +219,12 @@ export default function PathDetail() {
             (module: any, index: number) => {
                 // Ensure unique section ID
                 const sectionId = module.id || `section-${index}`
-                console.log('Creating section:', {
-                    index,
-                    moduleId: module.id,
-                    sectionId,
-                    title: module.title,
-                })
+                // console.log('Creating section:', {
+                //     index,
+                //     moduleId: module.id,
+                //     sectionId,
+                //     title: module.title,
+                // })
 
                 return {
                     id: sectionId,
@@ -282,19 +282,19 @@ export default function PathDetail() {
             0,
         )
 
-        console.log('convertServerPathToPathData - Total items calculation:', {
-            pathTitle: curriculum.title || serverPath.title,
-            totalSections: sections.length,
-            totalItems,
-            completedItems,
-            sectionBreakdown: sections.map((s) => ({
-                id: s.id,
-                title: s.title,
-                itemCount: s.items.length,
-                completedCount: s.items.filter((item) => item.status === 'done')
-                    .length,
-            })),
-        })
+        // console.log('convertServerPathToPathData - Total items calculation:', {
+        //     pathTitle: curriculum.title || serverPath.title,
+        //     totalSections: sections.length,
+        //     totalItems,
+        //     completedItems,
+        //     sectionBreakdown: sections.map((s) => ({
+        //         id: s.id,
+        //         title: s.title,
+        //         itemCount: s.items.length,
+        //         completedCount: s.items.filter((item) => item.status === 'done')
+        //             .length,
+        //     })),
+        // })
 
         return {
             id: curriculum.id || serverPath.id,
@@ -323,7 +323,7 @@ export default function PathDetail() {
     ) => {
         if (!pathData) return
 
-        console.log('Handle status change:', { sectionId, itemId, newStatus })
+        // console.log('Handle status change:', { sectionId, itemId, newStatus })
 
         interface ServerPath {
             id: string;
@@ -372,33 +372,33 @@ export default function PathDetail() {
                 pathSlug!,
             )
 
-            console.log('Progress calculation after status change:', {
-                pathId: matchingPath.id,
-                pathSlug,
-                progress,
-                completed,
-                totalItemsInPathData: pathData.totalItems,
-            })
+            // console.log('Progress calculation after status change:', {
+            //     pathId: matchingPath.id,
+            //     pathSlug,
+            //     progress,
+            //     completed,
+            //     totalItemsInPathData: pathData.totalItems,
+            // })
 
             setPathData((prevPathData) => {
                 if (!prevPathData) return null
 
-                console.log(
-                    'Current sections before update:',
-                    prevPathData.sections.map((s) => ({
-                        id: s.id,
-                        title: s.title,
-                        isExpanded: s.isExpanded,
-                    })),
-                )
-                console.log(
-                    'Updating section:',
-                    sectionId,
-                    'item:',
-                    itemId,
-                    'status:',
-                    newStatus,
-                )
+                // console.log(
+                //     'Current sections before update:',
+                //     prevPathData.sections.map((s) => ({
+                //         id: s.id,
+                //         title: s.title,
+                //         isExpanded: s.isExpanded,
+                //     })),
+                // )
+                // console.log(
+                //     'Updating section:',
+                //     sectionId,
+                //     'item:',
+                //     itemId,
+                //     'status:',
+                //     newStatus,
+                // )
 
                 const updatedSections = prevPathData.sections.map((section) =>
                     section.id === sectionId
@@ -420,14 +420,14 @@ export default function PathDetail() {
                         : section,
                 )
 
-                console.log(
-                    'Updated sections after update:',
-                    updatedSections.map((s) => ({
-                        id: s.id,
-                        title: s.title,
-                        isExpanded: s.isExpanded,
-                    })),
-                )
+                // console.log(
+                //     'Updated sections after update:',
+                //     updatedSections.map((s) => ({
+                //         id: s.id,
+                //         title: s.title,
+                //         isExpanded: s.isExpanded,
+                //     })),
+                // )
 
                 return {
                     ...prevPathData,
@@ -453,7 +453,7 @@ export default function PathDetail() {
     }
 
     const toggleSectionExpanded = (sectionId: string) => {
-        console.log('Toggle section expanded:', sectionId)
+        // console.log('Toggle section expanded:', sectionId)
         setPathData((prevPathData) => {
             if (!prevPathData) return null
 

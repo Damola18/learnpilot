@@ -200,7 +200,6 @@ class DirectStorage {
             }
 
             const rows = await db.all(query, params)
-
             const paths = rows.map((row) => {
                 const curriculum = JSON.parse(row.curriculum)
                 const tags = JSON.parse(row.tags)
@@ -338,11 +337,15 @@ class DirectStorage {
 
     async getProgress(pathId, slug) {
         const db = await this.connect()
-
+        // console.log('=====',pathId)
+    //    const p =  await db.get(
+    //         'SELECT path_id, slug FROM learning_progress'
+    //     )
+    //     console.log('+++++',p)
         try {
             const row = await db.get(
-                'SELECT * FROM learning_progress WHERE path_id = ? AND slug = ?',
-                [pathId, slug],
+                'SELECT * FROM learning_progress WHERE id = ?',
+                [pathId],
             )
 
             if (!row) {
