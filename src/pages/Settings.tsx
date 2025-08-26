@@ -142,25 +142,6 @@ const Settings = () => {
                 </div>
               </div>
 
-              {/* Learning Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center p-3 rounded-lg bg-primary/5">
-                  <div className="text-lg font-bold text-primary">{stats.totalHours}h</div>
-                  <div className="text-xs text-muted-foreground">Learning Time</div>
-                </div>
-                <div className="text-center p-3 rounded-lg bg-green-500/5">
-                  <div className="text-lg font-bold text-green-600">{stats.completedPaths}</div>
-                  <div className="text-xs text-muted-foreground">Completed Paths</div>
-                </div>
-                <div className="text-center p-3 rounded-lg bg-orange-500/5">
-                  <div className="text-lg font-bold text-orange-600">{stats.currentStreak}</div>
-                  <div className="text-xs text-muted-foreground">Day Streak</div>
-                </div>
-                <div className="text-center p-3 rounded-lg bg-accent">
-                  <div className="text-lg font-bold">{stats.totalBadges}</div>
-                  <div className="text-xs text-muted-foreground">Badges</div>
-                </div>
-              </div>
             </div>
           </div>
         </CardContent>
