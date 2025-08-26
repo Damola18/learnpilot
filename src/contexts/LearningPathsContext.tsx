@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { GeneratedLearningPath, iqaiCurriculumService } from "@/services/iqaiCurriculumService";
 import { parseDurationToHours } from "@/utils/durationUtils";
+import { usePathProgress } from '@/contexts/PathProgressContext';  
 
 export interface LearningPath {
   id: string;
@@ -12,7 +13,7 @@ export interface LearningPath {
   difficulty: string;
   estimatedTime: string;
   category: string;
-  status: "active" | "completed" | "not_started";
+  status: "not_started" | "active" | "completed";
   rating: number;
   enrollments: number;
   color: string;
@@ -76,41 +77,81 @@ const generateTags = (domain: string, experienceLevel: string): string[] => {
 
 export function LearningPathsProvider({ children }: { children: ReactNode }) {
   const [paths, setPaths] = useState<LearningPath[]>([]);
+  const {
+    getPathProgress,
+} = usePathProgress()
 
   // Load paths from server on mount
   useEffect(() => {
     const loadPaths = async () => {
-      try {
-        const response = await iqaiCurriculumService.getStoredLearningPaths();
-        if (response && response.paths) {
-          const formattedPaths = response.paths.map((path: any) => ({
-            id: path.id,
-            title: path.title,
-            description: path.description,
-            progress: 0,
-            totalModules: path.curriculum?.modules?.length || 0,
-            completedModules: 0,
-            difficulty: path.difficulty || 'Intermediate',
-            estimatedTime: calculateDuration(path.curriculum),
-            category: path.domain || 'General',
-            status: path.status || 'not_started',
-            rating: 4.5,
-            enrollments: 1,
-            color: difficultyColors[path.difficulty || 'Intermediate'],
-            tags: path.curriculum?.tags || [],
-            lastAccessed: path.updated_at ? new Date(path.updated_at).toISOString() : 'Never',
-            createdAt: path.created_at ? new Date(path.created_at).toISOString() : new Date().toISOString(),
-            generatedPath: path.curriculum
-          }));
-          setPaths(formattedPaths);
+        try {
+            const response = await iqaiCurriculumService.getStoredLearningPaths();
+            if (response && response.paths) {
+                const formattedPaths = response.paths.map((path: any) => {
+                    // Calculate initial completed modules count
+                    let completedModuleCount = 0;
+                    if (path.curriculum?.modules) {
+                        const pathProgress = getPathProgress(path.id, path.title
+                            .toLowerCase()
+                            .replace(/[^a-z0-9]+/g, '-')
+                            .replace(/(^-|-$)/g, ''));
+                        
+                        if (pathProgress) {
+                            completedModuleCount = path.curriculum.modules.filter((module: any, index: number) => {
+                                const sectionId = module.id || `section-${index}`;
+                                const moduleItems = [
+                                    ...(module.competencies || []).map(
+                                        (_, compIndex: number) => `${sectionId}-competency-${compIndex}`,
+                                    ),
+                                    ...(module.resources || []).map(
+                                        (_, resIndex: number) => `${sectionId}-resource-${resIndex}`,
+                                    ),
+                                    ...(module.assessments || []).map(
+                                        (_, assIndex: number) => `${sectionId}-assessment-${assIndex}`,
+                                    ),
+                                ];
+
+                                if (moduleItems.length === 0) {
+                                    return false;
+                                }
+
+                                return moduleItems.every((itemId) => {
+                                    const itemProgress = pathProgress.items[itemId];
+                                    return itemProgress?.status === 'done';
+                                });
+                            }).length;
+                        }
+                    }
+
+                    return {
+                        id: path.id,
+                        title: path.title,
+                        description: path.description,
+                        progress: 0,
+                        totalModules: path.curriculum?.modules?.length || 0,
+                        completedModules: completedModuleCount,
+                        difficulty: path.difficulty || 'Intermediate',
+                        estimatedTime: calculateDuration(path.curriculum),
+                        category: path.domain || 'General',
+                        status: path.status || 'not_started',
+                        rating: 4.5,
+                        enrollments: 1,
+                        color: difficultyColors[path.difficulty || 'Intermediate'],
+                        tags: path.curriculum?.tags || [],
+                        lastAccessed: path.updated_at ? new Date(path.updated_at).toISOString() : 'Never',
+                        createdAt: path.created_at ? new Date(path.created_at).toISOString() : new Date().toISOString(),
+                        generatedPath: path.curriculum
+                    };
+                });
+                setPaths(formattedPaths);
+            }
+        } catch (error) {
+            console.error('Error loading paths:', error);
         }
-      } catch (error) {
-        console.error('Error loading paths:', error);
-      }
     };
 
     loadPaths();
-  }, []);
+}, []);
 
   useEffect(() => {
     localStorage.setItem('learningPaths', JSON.stringify(paths));
@@ -143,9 +184,27 @@ export function LearningPathsProvider({ children }: { children: ReactNode }) {
   };
 
   const updatePath = (id: string, updates: Partial<LearningPath>) => {
-    setPaths(prev => prev.map(path => 
-      path.id === id ? { ...path, ...updates } : path
-    ));
+    setPaths(prev => prev.map(path => {
+      if (path.id === id) {
+        let newStatus = path.status;
+        if (updates.progress !== undefined) {
+          if (updates.progress === 100) {
+            newStatus = "completed";
+          } else if (updates.progress > 0) {
+            newStatus = "active";
+          } else if (!path.progress && !updates.progress) {
+            newStatus = "not_started";
+          }
+        }
+        
+        return { 
+          ...path, 
+          ...updates,
+          status: updates.status || newStatus 
+        };
+      }
+      return path;
+    }));
   };
 
   const getPath = (id: string) => {

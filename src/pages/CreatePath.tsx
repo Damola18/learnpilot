@@ -199,8 +199,7 @@ export default function CreatePath() {
                 )
 
                 if (saveResult.success) {
-                    // console.log('Learning path saved successfully!')
-                    // Navigate to paths page
+                    console.log('Learning path saved successfully!')
                     setTimeout(() => {
                         navigate('/dashboard/paths')
                     }, 1500)
@@ -379,6 +378,7 @@ export default function CreatePath() {
                                 </div>
                             )}
 
+                            {/* Learning Outcomes */}
                             {generatedPath.outcomes.length > 0 && (
                                 <div>
                                     <h3 className='font-semibold mb-2'>
@@ -401,6 +401,8 @@ export default function CreatePath() {
                             )}
                         </CardContent>
                     </Card>
+
+                    {/* Modules */}
                     <div className='space-y-4'>
                         <h2 className='text-2xl font-bold'>Learning Modules</h2>
                         {generatedPath.modules.map((module, index) => (
@@ -433,6 +435,8 @@ export default function CreatePath() {
                                     <p className='text-muted-foreground'>
                                         {module.description}
                                     </p>
+
+                                    {/* Competencies */}
                                     <div>
                                         <h4 className='font-medium mb-2'>
                                             Key Competencies
@@ -450,6 +454,8 @@ export default function CreatePath() {
                                             )}
                                         </div>
                                     </div>
+
+                                    {/* Resources */}
                                     <div>
                                         <h4 className='font-medium mb-2'>
                                             Learning Resources
@@ -549,6 +555,7 @@ export default function CreatePath() {
                         </Button>
                     </div>
 
+                    {/* Error Display */}
                     {generationError && (
                         <Card className='border-destructive/50'>
                             <CardContent className='p-4'>
@@ -566,7 +573,7 @@ export default function CreatePath() {
     return (
         <div className='min-h-screen bg-gradient-to-br from-primary/5 to-success/5 p-6'>
             <div className='max-w-4xl mx-auto space-y-8'>
-
+                {/* Header */}
                 <div className='text-center space-y-4'>
                     <h1 className='text-3xl font-bold text-foreground'>
                         Create Your Learning Path
@@ -576,6 +583,8 @@ export default function CreatePath() {
                         just for you
                     </p>
                 </div>
+
+                {/* Progress Steps */}
                 <Card className='border-0 shadow-card'>
                     <CardContent className='p-6'>
                         <div className='flex items-center justify-between'>

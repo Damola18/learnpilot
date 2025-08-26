@@ -337,6 +337,7 @@ export default function PathDetail() {
             return generatedSlug === pathSlug
         })
 
+
         if (matchingPath) {
             updateItemStatus(matchingPath.id, pathSlug!, itemId, newStatus)
 
@@ -345,16 +346,46 @@ export default function PathDetail() {
                 pathSlug!,
             )
 
+            let completedModuleCount = 0;
+            if (matchingPath.curriculum?.modules) {
+                const pathProgress = getPathProgress(matchingPath.id, pathSlug!);
+                if (pathProgress) {
+                    completedModuleCount = matchingPath.curriculum.modules.filter((module, index) => {
+                        const sectionId = module.id || `section-${index}`;
+                        const moduleItems = [
+                            ...(module.competencies || []).map(
+                                (_, compIndex) => `${sectionId}-competency-${compIndex}`,
+                            ),
+                            ...(module.resources || []).map(
+                                (_, resIndex) => `${sectionId}-resource-${resIndex}`,
+                            ),
+                            ...(module.assessments || []).map(
+                                (_, assIndex) => `${sectionId}-assessment-${assIndex}`,
+                            ),
+                        ];
+
+                        if (moduleItems.length === 0) {
+                            return false;
+                        }
+
+                        return moduleItems.every((itemId) => {
+                            const itemProgress = pathProgress.items[itemId];
+                            return itemProgress?.status === 'done';
+                        });
+                    }).length;
+                }
+            }
+
             setPathData((prevPathData) => {
-                if (!prevPathData) return null
+                if (!prevPathData) return null;
 
                 const updatedSections = prevPathData.sections.map((section) =>
                     section.id === sectionId
                         ? {
-                              ...section,
-                              items: section.items.map((item) =>
-                                  item.id === itemId
-                                      ? {
+                            ...section,
+                            items: section.items.map((item) =>
+                                item.id === itemId
+                                    ? {
                                             ...item,
                                             status: newStatus as
                                                 | 'pending'
@@ -362,23 +393,23 @@ export default function PathDetail() {
                                                 | 'in-progress'
                                                 | 'skip',
                                         }
-                                      : item,
-                              ),
-                          }
+                                    : item,
+                            ),
+                        }
                         : section,
-                )
+                );
 
                 return {
                     ...prevPathData,
                     sections: updatedSections,
                     totalProgress: progress,
                     completedItems: completed,
-                }
-            })
+                };
+            });
 
             updatePath(matchingPath.id, {
                 progress: progress,
-                completedModules: completed,
+                completedModules: completedModuleCount,
                 status:
                     progress === 100
                         ? 'completed'
@@ -386,7 +417,7 @@ export default function PathDetail() {
                         ? 'active'
                         : 'not_started',
                 lastAccessed: new Date().toLocaleString(),
-            })
+            });
         }
     }
 
