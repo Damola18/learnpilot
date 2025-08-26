@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Brain, Target, Zap, BookOpen, Users, TrendingUp, ChevronDown, Play, CheckCircle, MessageCircle } from "lucide-react";
+import { ArrowRight, Brain, Target, Zap, BookOpen, Users, TrendingUp, ChevronDown, Play, CheckCircle, MessageCircle, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
@@ -41,11 +41,10 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b border-border/40 bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Brain className="w-8 h-8 text-primary" />
+            <GraduationCap className="w-8 h-8 text-primary" />
             <span className="font-satoshi font-bold text-xl">LearnPilot</span>
           </div>
 

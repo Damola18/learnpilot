@@ -14,7 +14,6 @@ import PathDetail from './pages/PathDetail'
 import Mentor from './pages/Mentor'
 import Progress from './pages/Progress'
 import Assessment from './pages/Assessment'
-import Resources from './pages/Resources'
 import Achievements from './pages/Achievements'
 import Settings from './pages/Settings'
 import Profile from './pages/Profile'
@@ -80,10 +79,7 @@ const App = () => (
                                         path='assessment'
                                         element={<Assessment />}
                                     />
-                                    <Route
-                                        path='resources'
-                                        element={<Resources />}
-                                    />
+                                   
                                     <Route
                                         path='achievements'
                                         element={<Achievements />}

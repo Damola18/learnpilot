@@ -27,21 +27,18 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+
 
 const navigationItems = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
   { title: "My Paths", url: "/dashboard/paths", icon: BookOpen },
   { title: "Progress", url: "/dashboard/progress", icon: BarChart3 },
   { title: "AI Mentor", url: "/dashboard/mentor", icon: MessageCircle },
-  { title: "Resources", url: "/dashboard/resources", icon: Library },
 ];
 
 const quickActions = [
   { title: "Create Path", url: "/dashboard/create-path", icon: Target },
   { title: "Take Assessment", url: "/dashboard/assessment", icon: Brain },
-  { title: "Achievements", url: "/dashboard/achievements", icon: Trophy },
 ];
 
 export function AppSidebar() {
@@ -99,7 +96,6 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Quick Actions */}
         <SidebarGroup>
           <SidebarGroupLabel className="px-3 text-sidebar-foreground/60">
             {!collapsed && "Quick Actions"}
