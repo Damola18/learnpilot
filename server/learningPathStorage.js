@@ -18,38 +18,38 @@ const __dirname = path.dirname(__filename)
 const APP_NAME = 'learning-path-storage'
 
 // Helper function to get SQLite connection string
-// function getSqliteConnectionString(dbName) {
-//     const dataDir = path.join(__dirname, 'data')
-//     const dbPath = path.join(dataDir, `${dbName}.db`)
-
-//     // Ensure the data directory exists with proper permissions
-//     if (!fs.existsSync(dataDir)) {
-//         fs.mkdirSync(dataDir, { recursive: true, mode: 0o755 })
-//         console.log(`Created database directory: ${dataDir}`)
-//     }
-
-//     // Verify the directory is writable
-//     try {
-//         fs.accessSync(dataDir, fs.constants.W_OK)
-//         console.log(`Database directory is writable: ${dataDir}`)
-//     } catch (error) {
-//         console.error(`Database directory is not writable: ${dataDir}`, error)
-//         throw new Error(`Cannot write to database directory: ${dataDir}`)
-//     }
-
-//     console.log(`Using database path: ${dbPath}`)
-
-//     // Use file: protocol for SQLite connection
-//     return `sqlite:///${dbPath}`
-// }
-
 function getSqliteConnectionString(dbName) {
-    const dbPath = path.join(__dirname, 'data', `${dbName}.db`)
-    if (!fs.existsSync(path.dirname(dbPath))) {
-        fs.mkdirSync(path.dirname(dbPath), { recursive: true })
+    const dataDir = path.join(__dirname, 'data')
+    const dbPath = path.join(dataDir, `${dbName}.db`)
+
+    // Ensure the data directory exists with proper permissions
+    if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true, mode: 0o755 })
+        console.log(`Created database directory: ${dataDir}`)
     }
+
+    // Verify the directory is writable
+    try {
+        fs.accessSync(dataDir, fs.constants.W_OK)
+        console.log(`Database directory is writable: ${dataDir}`)
+    } catch (error) {
+        console.error(`Database directory is not writable: ${dataDir}`, error)
+        throw new Error(`Cannot write to database directory: ${dataDir}`)
+    }
+
+    console.log(`Using database path: ${dbPath}`)
+
+    // Use file: protocol for SQLite connection
     return `sqlite:///${dbPath}`
 }
+
+// function getSqliteConnectionString(dbName) {
+//     const dbPath = path.join(__dirname, 'data', `${dbName}.db`)
+//     if (!fs.existsSync(path.dirname(dbPath))) {
+//         fs.mkdirSync(path.dirname(dbPath), { recursive: true })
+//     }
+//     return `sqlite:///${dbPath}`
+// }
 
 // Learning Path Storage Tools
 const saveLearningPathTool = createTool({
