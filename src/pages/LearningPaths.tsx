@@ -55,6 +55,7 @@ import { Link } from 'react-router-dom'
 import { usePathProgress } from '@/contexts/PathProgressContext'
 import { useToast } from '@/hooks/use-toast'
 import { iqaiCurriculumService } from '@/services/iqaiCurriculumService'
+import { useLearningPaths } from '@/contexts/LearningPathsContext'
 
 interface LearningPath {
     id: number
@@ -81,117 +82,6 @@ interface EditFormData {
     estimatedTime: string
     category: string
 }
-
-// const mockPaths: LearningPath[] = [
-//     {
-//         id: 1,
-//         title: 'React Advanced Concepts',
-//         description:
-//             'Master hooks, context, performance optimization, and advanced patterns',
-//         progress: 65,
-//         totalModules: 12,
-//         completedModules: 8,
-//         difficulty: 'Intermediate',
-//         estimatedTime: '24 hours',
-//         category: 'Frontend Development',
-//         status: 'active',
-//         rating: 4.8,
-//         enrollments: 1250,
-//         color: 'bg-blue-500',
-//         tags: ['React', 'JavaScript', 'Hooks'],
-//         lastAccessed: '2 hours ago',
-//     },
-//     {
-//         id: 2,
-//         title: 'Machine Learning Fundamentals',
-//         description:
-//             'Complete introduction to ML algorithms, data preprocessing, and model evaluation',
-//         progress: 30,
-//         totalModules: 16,
-//         completedModules: 5,
-//         difficulty: 'Beginner',
-//         estimatedTime: '32 hours',
-//         category: 'Data Science',
-//         status: 'active',
-//         rating: 4.9,
-//         enrollments: 2100,
-//         color: 'bg-green-500',
-//         tags: ['Python', 'ML', 'Data Science'],
-//         lastAccessed: '1 day ago',
-//     },
-//     {
-//         id: 3,
-//         title: 'UX Design Principles',
-//         description:
-//             'Learn user-centered design, prototyping, and usability testing',
-//         progress: 90,
-//         totalModules: 8,
-//         completedModules: 7,
-//         difficulty: 'Intermediate',
-//         estimatedTime: '16 hours',
-//         category: 'Design',
-//         status: 'active',
-//         rating: 4.7,
-//         enrollments: 890,
-//         color: 'bg-purple-500',
-//         tags: ['Design', 'UX', 'Figma'],
-//         lastAccessed: '3 days ago',
-//     },
-//     {
-//         id: 4,
-//         title: 'Full-Stack JavaScript Development',
-//         description:
-//             'Build complete web applications with Node.js, Express, and MongoDB',
-//         progress: 0,
-//         totalModules: 20,
-//         completedModules: 0,
-//         difficulty: 'Advanced',
-//         estimatedTime: '40 hours',
-//         category: 'Full-Stack Development',
-//         status: 'not_started',
-//         rating: 4.9,
-//         enrollments: 1560,
-//         color: 'bg-yellow-500',
-//         tags: ['JavaScript', 'Node.js', 'MongoDB'],
-//         lastAccessed: 'Never',
-//     },
-//     {
-//         id: 5,
-//         title: 'DevOps with Docker & Kubernetes',
-//         description:
-//             'Master containerization and orchestration for modern applications',
-//         progress: 100,
-//         totalModules: 14,
-//         completedModules: 14,
-//         difficulty: 'Advanced',
-//         estimatedTime: '28 hours',
-//         category: 'DevOps',
-//         status: 'completed',
-//         rating: 4.8,
-//         enrollments: 750,
-//         color: 'bg-indigo-500',
-//         tags: ['Docker', 'Kubernetes', 'DevOps'],
-//         lastAccessed: '1 week ago',
-//     },
-//     {
-//         id: 6,
-//         title: 'Mobile Development with React Native',
-//         description:
-//             'Build cross-platform mobile apps with React Native and Expo',
-//         progress: 45,
-//         totalModules: 18,
-//         completedModules: 8,
-//         difficulty: 'Intermediate',
-//         estimatedTime: '36 hours',
-//         category: 'Mobile Development',
-//         status: 'active',
-//         rating: 4.6,
-//         enrollments: 980,
-//         color: 'bg-pink-500',
-//         tags: ['React Native', 'Mobile', 'JavaScript'],
-//         lastAccessed: '5 hours ago',
-//     },
-// ]
 
 const categories = [
     'All Categories',
@@ -451,7 +341,6 @@ export default function LearningPaths() {
     const calculateDuration = (curriculum) => {
         if (!curriculum?.modules) return '2 hours'
 
-        // First check if totalDuration is available and use it
         if (curriculum.totalDuration) {
             const totalDurationStr = curriculum.totalDuration.toString()
 
@@ -584,17 +473,6 @@ export default function LearningPaths() {
         setIsViewModalOpen(true)
     }
 
-    const handleEditPath = (path: LearningPath) => {
-        setSelectedPath(path)
-        setEditFormData({
-            title: path.title,
-            description: path.description,
-            difficulty: path.difficulty,
-            estimatedTime: path.estimatedTime,
-            category: path.category,
-        })
-        setIsEditModalOpen(true)
-    }
 
     const handleDownloadProgress = (path: LearningPath) => {
         // Simulate download progress
@@ -690,7 +568,7 @@ export default function LearningPaths() {
     }
 
     return (
-        <div className='p-6 space-y-8 max-w-7xl mx-auto'>
+        <div className='p-6 space-y-8  mx-auto'>
             {/* Header */}
             <div className='flex flex-col lg:flex-row lg:items-center justify-between gap-4'>
                 <div>
@@ -701,26 +579,29 @@ export default function LearningPaths() {
                         Continue your learning journey or explore new paths
                     </p>
                 </div>
-                <Button asChild size='lg' className='shadow-learning'>
-                    <Link to='/dashboard/create-path'>
-                        <Plus className='w-4 h-4 mr-2' />
-                        Create New Path
-                    </Link>
-                </Button>
-                <Button
-                    variant='outline'
-                    size='lg'
-                    onClick={refreshPaths}
-                    disabled={isRefreshing}
-                    className='shadow-card'
-                >
-                    <RefreshCw
-                        className={`w-4 h-4 mr-2 ${
-                            isRefreshing ? 'animate-spin' : ''
-                        }`}
-                    />
-                    Refresh
-                </Button>
+                <div className='flex gap-4'>
+                    <Button asChild size='lg' className='shadow-learning'>
+                        <Link to='/dashboard/create-path'>
+                            <Plus className='w-4 h-4 mr-2' />
+                            Create New Path
+                        </Link>
+                    </Button>
+                    <Button
+                        variant='outline'
+                        size='lg'
+                        onClick={refreshPaths}
+                        disabled={isRefreshing}
+                        className='shadow-card'
+                    >
+                        <RefreshCw
+                            className={`w-4 h-4 mr-2 ${
+                                isRefreshing ? 'animate-spin' : ''
+                            }`}
+                        />
+                        Refresh
+                    </Button>
+                </div>
+                
             </div>
 
             {/* Quick Stats */}
@@ -924,17 +805,7 @@ export default function LearningPaths() {
                                                 <Eye className='w-4 h-4 mr-2' />
                                                 View Details
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem
-                                                onClick={() =>
-                                                    handleEditPath({
-                                                        ...path,
-                                                        id: Number(path.id),
-                                                    })
-                                                }
-                                            >
-                                                <Edit className='w-4 h-4 mr-2' />
-                                                Edit Path
-                                            </DropdownMenuItem>
+                                           
                                             <DropdownMenuItem
                                                 onClick={() =>
                                                     handleDownloadProgress({

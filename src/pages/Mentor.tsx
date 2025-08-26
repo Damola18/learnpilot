@@ -157,8 +157,8 @@ export default function Mentor() {
       {/* Sidebar */}
       <div className="w-80 border-r border-border bg-muted/20 p-6 space-y-6">
         {/* Mentor Info */}
-        <Card className="border-0 shadow-card bg-gradient-hero text-white">
-          <CardContent className="p-6 text-center">
+        <Card className="border-0 bg-primary text-white">
+          <CardContent className="p-6 text-center dark:text-black">
             <div className="w-16 h-16 rounded-full bg-white/20 mx-auto flex items-center justify-center mb-4">
               <Sparkles className="w-8 h-8" />
             </div>
@@ -247,7 +247,7 @@ export default function Mentor() {
               <div>
                 <h2 className="font-semibold">AI Learning Mentor</h2>
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-success rounded-full"></div>
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                   <span className="text-sm text-muted-foreground">Online</span>
                 </div>
               </div>

@@ -2,14 +2,27 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress as ProgressBar } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, Clock, Target, TrendingUp, BookOpen, Award } from "lucide-react";
+import { useLearningPaths } from "@/contexts/LearningPathsContext";
+
+
+export interface ProgressData {
+  subject: string;
+  progress: number;
+  timeSpent: string;
+  badge: string;
+}
 
 const Progress = () => {
-  const progressData = [
-    { subject: "JavaScript Fundamentals", progress: 85, timeSpent: "24h", badge: "Advanced" },
-    { subject: "React Development", progress: 60, timeSpent: "18h", badge: "Intermediate" },
-    { subject: "TypeScript Basics", progress: 40, timeSpent: "12h", badge: "Beginner" },
-    { subject: "Node.js Backend", progress: 25, timeSpent: "8h", badge: "Beginner" },
-  ];
+    const {
+    paths,
+  } = useLearningPaths()
+
+const progressData: ProgressData[] = paths.map((path) => ({
+  subject: path.description,
+  progress: path.progress,
+  timeSpent: path.estimatedTime,
+  badge: path.difficulty,
+}));
 
   const weeklyStats = [
     { day: "Mon", hours: 2.5 },
@@ -20,6 +33,7 @@ const Progress = () => {
     { day: "Sat", hours: 4.0 },
     { day: "Sun", hours: 2.5 },
   ];
+
 
   return (
     <div className="p-8 space-y-8">
@@ -86,10 +100,10 @@ const Progress = () => {
         </CardHeader>
         <CardContent className="space-y-6">
           {progressData.map((item, index) => (
-            <div key={index} className="space-y-2">
+            <div key={index} className="space-y-2 p-3 border border-slate-200 rounded-xl ">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <h4 className="font-medium">{item.subject}</h4>
+                  <h4 className=" text-lg font-medium">{item.subject}</h4>
                   <Badge variant="secondary" className="text-xs">{item.badge}</Badge>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -97,8 +111,9 @@ const Progress = () => {
                   {item.timeSpent}
                 </div>
               </div>
+              <p className="text-xs" >Progress:</p>
               <div className="flex items-center gap-3">
-                <ProgressBar value={item.progress} className="flex-1" />
+                <ProgressBar value={item.progress} className="flex-1 h-2 " />
                 <span className="text-sm font-medium text-primary">{item.progress}%</span>
               </div>
             </div>
