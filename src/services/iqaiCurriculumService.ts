@@ -785,6 +785,108 @@ class IQAICurriculumService {
             }
         }
     }
+
+    // Save learning progress to the server
+    async saveProgress(
+        pathId: string,
+        slug: string,
+        progressData: {
+            items: Record<string, any>
+            totalProgress: number
+            completedItems: number
+            totalItems: number
+            lastAccessed: string
+        },
+    ): Promise<{ success: boolean; error?: string }> {
+        try {
+            console.log('Saving progress to server...', {
+                pathId,
+                slug,
+                progressData,
+            })
+
+            const response = await fetch(
+                'http://localhost:3001/save-progress',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        pathId,
+                        slug,
+                        ...progressData,
+                    }),
+                },
+            )
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`)
+            }
+
+            const data = await response.json()
+
+            if (data.success) {
+                console.log('Progress saved successfully:', data.result)
+                return { success: true }
+            } else {
+                throw new Error(data.error || 'Failed to save progress')
+            }
+        } catch (error) {
+            console.error('Error saving progress:', error)
+            return {
+                success: false,
+                error:
+                    error instanceof Error
+                        ? error.message
+                        : 'Unknown error occurred',
+            }
+        }
+    }
+
+    // Retrieve learning progress from the server
+    async getProgress(
+        pathId: string,
+        slug: string,
+    ): Promise<{ success: boolean; progress?: any; error?: string }> {
+        try {
+            console.log('Fetching progress from server...', { pathId, slug })
+
+            const response = await fetch(
+                `http://localhost:3001/get-progress?pathId=${encodeURIComponent(
+                    pathId,
+                )}&slug=${encodeURIComponent(slug)}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                },
+            )
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`)
+            }
+
+            const data = await response.json()
+
+            if (data.success) {
+                console.log('Progress retrieved successfully:', data.progress)
+                return { success: true, progress: data.progress }
+            } else {
+                throw new Error(data.error || 'Failed to retrieve progress')
+            }
+        } catch (error) {
+            console.error('Error retrieving progress:', error)
+            return {
+                success: false,
+                error:
+                    error instanceof Error
+                        ? error.message
+                        : 'Unknown error occurred',
+            }
+        }
+    }
 }
 
 export const iqaiCurriculumService = new IQAICurriculumService()

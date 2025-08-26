@@ -71,6 +71,7 @@ export default function PathDetail() {
         updateItemStatus,
         initializePathProgress,
         calculateProgress,
+        loadProgressFromServer,
     } = usePathProgress()
 
     const [pathData, setPathData] = useState<PathData | null>(null)
@@ -122,6 +123,9 @@ export default function PathDetail() {
                 }
 
                 console.log('Found matching path:', matchingPath)
+
+                // Load progress from server first
+                await loadProgressFromServer(matchingPath.id, pathSlug)
 
                 // Convert the server path data to the format expected by PathDetail
                 const convertedData = convertServerPathToPathData(
@@ -178,7 +182,7 @@ export default function PathDetail() {
         }
 
         loadPathData()
-    }, [pathSlug, getPathProgress, initializePathProgress])
+    }, [pathSlug])
 
     // Function to convert server path data to PathDetail format
     const convertServerPathToPathData = (
@@ -204,48 +208,59 @@ export default function PathDetail() {
 
         // Convert modules to sections
         const sections: PathSection[] = curriculum.modules.map(
-            (module: any, index: number) => ({
-                id: module.id,
-                title: `Section ${index + 1}: ${module.title}`,
-                description: module.description,
-                totalDuration: module.duration || '30 min',
-                isExpanded: index === 0,
-                items: [
-                    ...(module.competencies || []).map(
-                        (competency: string, compIndex: number) => ({
-                            id: `${module.id}-competency-${compIndex}`,
-                            title: competency,
-                            duration: `15 min`,
-                            status: 'pending' as const,
-                            type: 'lesson' as const,
-                            description: `Learn about ${competency}`,
-                        }),
-                    ),
-                    ...(module.resources || []).map(
-                        (resource: any, resIndex: number) => ({
-                            id: `${module.id}-resource-${resIndex}`,
-                            title: resource.title,
-                            duration: resource.estimatedTime || '10 min',
-                            status: 'pending' as const,
-                            type: 'resource' as const,
-                            description: `Resource: ${resource.title}`,
-                        }),
-                    ),
-                    ...(module.assessments || []).map(
-                        (assessment: any, assIndex: number) => ({
-                            id: `${module.id}-assessment-${assIndex}`,
-                            title: assessment.title,
-                            duration: '15 min',
-                            status: 'pending' as const,
-                            type:
-                                assessment.type === 'quiz'
-                                    ? ('quiz' as const)
-                                    : ('assessment' as const),
-                            description: assessment.description,
-                        }),
-                    ),
-                ],
-            }),
+            (module: any, index: number) => {
+                // Ensure unique section ID
+                const sectionId = module.id || `section-${index}`
+                console.log('Creating section:', {
+                    index,
+                    moduleId: module.id,
+                    sectionId,
+                    title: module.title,
+                })
+
+                return {
+                    id: sectionId,
+                    title: `Section ${index + 1}: ${module.title}`,
+                    description: module.description,
+                    totalDuration: module.duration || '30 min',
+                    isExpanded: index === 0,
+                    items: [
+                        ...(module.competencies || []).map(
+                            (competency: string, compIndex: number) => ({
+                                id: `${sectionId}-competency-${compIndex}`,
+                                title: competency,
+                                duration: `15 min`,
+                                status: 'pending' as const,
+                                type: 'lesson' as const,
+                                description: `Learn about ${competency}`,
+                            }),
+                        ),
+                        ...(module.resources || []).map(
+                            (resource: any, resIndex: number) => ({
+                                id: `${sectionId}-resource-${resIndex}`,
+                                title: resource.title,
+                                duration: resource.estimatedTime || '10 min',
+                                status: 'pending' as const,
+                                type: 'resource' as const,
+                                description: `Resource: ${resource.title}`,
+                            }),
+                        ),
+                        ...(module.assessments || []).map(
+                            (assessment: any, assIndex: number) => ({
+                                id: `${sectionId}-assessment-${assIndex}`,
+                                title: assessment.title,
+                                duration: '15 min',
+                                status: 'pending' as const,
+                                type:
+                                    assessment.type === 'quiz'
+                                        ? ('quiz' as const)
+                                        : ('assessment' as const),
+                                description: assessment.description,
+                            }),
+                        ),
+                    ],
+                }
+            },
         )
 
         const totalItems = sections.reduce(
@@ -258,6 +273,20 @@ export default function PathDetail() {
                 section.items.filter((item) => item.status === 'done').length,
             0,
         )
+
+        console.log('convertServerPathToPathData - Total items calculation:', {
+            pathTitle: curriculum.title || serverPath.title,
+            totalSections: sections.length,
+            totalItems,
+            completedItems,
+            sectionBreakdown: sections.map((s) => ({
+                id: s.id,
+                title: s.title,
+                itemCount: s.items.length,
+                completedCount: s.items.filter((item) => item.status === 'done')
+                    .length,
+            })),
+        })
 
         return {
             id: curriculum.id || serverPath.id,
@@ -379,6 +408,8 @@ export default function PathDetail() {
     ) => {
         if (!pathData) return
 
+        console.log('Handle status change:', { sectionId, itemId, newStatus })
+
         const matchingPath = serverPaths.find((path: any) => {
             const generatedSlug = path.title
                 .toLowerCase()
@@ -395,8 +426,33 @@ export default function PathDetail() {
                 pathSlug!,
             )
 
+            console.log('Progress calculation after status change:', {
+                pathId: matchingPath.id,
+                pathSlug,
+                progress,
+                completed,
+                totalItemsInPathData: pathData.totalItems,
+            })
+
             setPathData((prevPathData) => {
                 if (!prevPathData) return null
+
+                console.log(
+                    'Current sections before update:',
+                    prevPathData.sections.map((s) => ({
+                        id: s.id,
+                        title: s.title,
+                        isExpanded: s.isExpanded,
+                    })),
+                )
+                console.log(
+                    'Updating section:',
+                    sectionId,
+                    'item:',
+                    itemId,
+                    'status:',
+                    newStatus,
+                )
 
                 const updatedSections = prevPathData.sections.map((section) =>
                     section.id === sectionId
@@ -418,6 +474,15 @@ export default function PathDetail() {
                         : section,
                 )
 
+                console.log(
+                    'Updated sections after update:',
+                    updatedSections.map((s) => ({
+                        id: s.id,
+                        title: s.title,
+                        isExpanded: s.isExpanded,
+                    })),
+                )
+
                 return {
                     ...prevPathData,
                     sections: updatedSections,
@@ -426,21 +491,23 @@ export default function PathDetail() {
                 }
             })
 
-            updatePath(matchingPath.id, {
-                progress: progress,
-                completedModules: completed,
-                status:
-                    progress === 100
-                        ? 'completed'
-                        : progress > 0
-                        ? 'active'
-                        : 'not_started',
-                lastAccessed: new Date().toLocaleString(),
-            })
+            // Comment out updatePath for now to test if it's causing the issue
+            // updatePath(matchingPath.id, {
+            //     progress: progress,
+            //     completedModules: completed,
+            //     status:
+            //         progress === 100
+            //             ? 'completed'
+            //             : progress > 0
+            //             ? 'active'
+            //             : 'not_started',
+            //     lastAccessed: new Date().toLocaleString(),
+            // })
         }
     }
 
     const toggleSectionExpanded = (sectionId: string) => {
+        console.log('Toggle section expanded:', sectionId)
         setPathData((prevPathData) => {
             if (!prevPathData) return null
 
