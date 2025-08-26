@@ -21,83 +21,25 @@ import { Separator } from "@/components/ui/separator";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLearningPaths } from "@/contexts/LearningPathsContext";
+import { usePathProgress } from "@/contexts/PathProgressContext";
 
-const mockLearningPaths = [
-  {
-    id: 1,
-    title: "React Advanced Concepts",
-    description: "Master hooks, context, and performance optimization",
-    progress: 65,
-    totalModules: 12,
-    completedModules: 8,
-    difficulty: "Intermediate",
-    estimatedTime: "24 hours",
-    category: "Frontend Development",
-    color: "bg-blue-500",
-  },
-  {
-    id: 2,
-    title: "Machine Learning Fundamentals",
-    description: "Introduction to ML algorithms and data science",
-    progress: 30,
-    totalModules: 16,
-    completedModules: 5,
-    difficulty: "Beginner",
-    estimatedTime: "32 hours",
-    category: "Data Science",
-    color: "bg-green-500",
-  },
-  {
-    id: 3,
-    title: "UX Design Principles",
-    description: "Learn user-centered design and prototyping",
-    progress: 90,
-    totalModules: 8,
-    completedModules: 7,
-    difficulty: "Intermediate",
-    estimatedTime: "16 hours",
-    category: "Design",
-    color: "bg-purple-500",
-  },
-];
 
-const mockAchievements = [
-  { name: "First Steps", icon: Target, unlocked: true },
-  { name: "Week Warrior", icon: Calendar, unlocked: true },
-  { name: "Quick Learner", icon: Zap, unlocked: true },
-  { name: "Master Mind", icon: Brain, unlocked: false },
-];
 
-// const mockRecentActivity = [
-//   {
-//     type: "completed",
-//     title: "React Hooks Deep Dive",
-//     time: "2 hours ago",
-//     path: "React Advanced Concepts",
-//   },
-//   {
-//     type: "started",
-//     title: "Linear Regression Basics",
-//     time: "1 day ago",
-//     path: "Machine Learning Fundamentals",
-//   },
-//   {
-//     type: "achievement",
-//     title: "Earned Week Warrior badge",
-//     time: "2 days ago",
-//     path: null,
-//   },
-// ];
+
 
 export default function Dashboard() {
   const [currentTime] = useState(new Date());
   const { user } = useAuth();
   const {
     paths,
-    getCompletedPaths,
   } = useLearningPaths() 
 
-//   console.log("paths", paths)
+  const {
+    getPathProgress,
+    calculateProgress
+  } = usePathProgress();
+
+
 
   const greeting =
     currentTime.getHours() < 12
@@ -106,11 +48,50 @@ export default function Dashboard() {
         ? "Good afternoon"
         : "Good evening";
 
+  const weeklyStudyTime = paths.reduce((total, path) => {
+    const pathSlug = path.title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+    
+    const { progress } = calculateProgress(path.id, pathSlug);
+    const timeStr = path.estimatedTime || "0 hours";
+    const hours = parseInt(timeStr.match(/(\d+)/)?.[1] || "0");
+    
+    return total + (hours * progress / 100);
+  }, 0);
+
+  const completedPaths = paths.filter(path => {
+    const pathSlug = path.title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+    
+    const { progress } = calculateProgress(path.id, pathSlug);
+    return progress === 100;
+  }).length;
+
+  const skillsGained = paths.reduce((total, path) => {
+    const pathSlug = path.title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+    
+    const pathProgress = getPathProgress(path.id, pathSlug);
+
+    if (!pathProgress) return total;
+
+    return total + Object.entries(pathProgress.items)
+      .filter(([key, item]) => key.includes('competency') && item.status === 'done')
+      .length;
+  }, 0);
+
+
+
+    
   return (
     <div className="p-6 space-y-8 mx-auto">
-      {/* Welcome Section */}
       <div className="space-y-4">
-        {/* <div className="w-full flex flex-col md:flex-row items-center justify-between"> */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
@@ -127,7 +108,7 @@ export default function Dashboard() {
                 Create New Path
               </Link>
             </Button>
-            <Button variant="outline" size="lg" asChild>
+            <Button variant="outline" size="lg" asChild className="disabled:opacity-50">
               <Link to="/dashboard/mentor">
                 <Brain className="w-4 h-4 mr-2" />
                 Ask AI Mentor
@@ -154,7 +135,7 @@ export default function Dashboard() {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">This Week</p>
-                  <p className="text-2xl font-bold text-foreground">12.5h</p>
+                  <p className="text-2xl font-bold text-foreground">{weeklyStudyTime.toFixed(1)}h</p>
                 </div>
                 <Clock className="w-6 h-6 text-slate-400" />
               </div>
@@ -166,7 +147,7 @@ export default function Dashboard() {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Completed Paths</p>
-                  <p className="text-2xl font-bold text-foreground">{getCompletedPaths()}</p>
+                  <p className="text-2xl font-bold text-foreground">{completedPaths}</p>
                 </div>
                 <BookOpen className="w-6 h-6 text-slate-400" />
               </div>
@@ -177,8 +158,8 @@ export default function Dashboard() {
             <CardContent className="p-6 rounded-md border border--neutral-700">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Skills Gained</p>
-                  <p className="text-2xl font-bold text-foreground">24</p>
+                  <p className="text-sm text-muted-foreground">Path Items Completed</p>
+                  <p className="text-2xl font-bold text-foreground">{skillsGained}</p>
                 </div>
                 <TrendingUp className="w-6 h-6 text-slate-400" />
               </div>
@@ -187,7 +168,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3">
+      <div className="grid">
         <div className="lg:col-span-2 space-y-8">
           <Card className="border shadow-card rounded-md ">
             <CardHeader className="pb-4">
@@ -247,75 +228,7 @@ export default function Dashboard() {
               )}
             </CardContent>
           </Card>
-          {/* Recent Activity */}
           
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6 px-0 lg:px-3 ">
-          {/* Weekly Goal */}
-          <Card className="border shadow-card">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Target className="w-5 h-5 text-primary" />
-                Weekly Goal
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-foreground">12.5h</div>
-                <div className="text-sm text-muted-foreground">of 15h target</div>
-              </div>
-              <Progress value={83} className="h-3" />
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">2.5h remaining</span>
-                <span className="text-success font-medium">83%</span>
-              </div>
-              {/* <Button className="w-full" size="sm">
-                <PlayCircle className="w-4 h-4 mr-2" />
-                Start Learning
-              </Button> */}
-            </CardContent>
-          </Card>
-
-          {/* Achievements */}
-          <Card className="border shadow-card">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Award className="w-5 h-5 text-primary" />
-                Recent Achievements
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-3 pb-3">
-                {mockAchievements.map((achievement, index) => (
-                  <div
-                    key={index}
-                    className={`p-5 rounded-lg border text-center transition-all ${achievement.unlocked
-                      ? "border-success/20 bg-success-muted"
-                      : "border-border bg-muted/50"
-                      }`}
-                  >
-                    <achievement.icon
-                      className={`w-6 h-6 mx-auto mb-2 ${achievement.unlocked ? "text-success" : "text-muted-foreground"
-                        }`}
-                    />
-                    <p
-                      className={`text-xs font-medium ${achievement.unlocked ? "text-success-foreground" : "text-muted-foreground"
-                        }`}
-                    >
-                      {achievement.name}
-                    </p>
-                  </div>
-                ))}
-              </div>
-              <Button variant="outline" className="w-full mt-4" size="sm" asChild>
-                <Link to="/achievements">
-                  View All Achievements
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>

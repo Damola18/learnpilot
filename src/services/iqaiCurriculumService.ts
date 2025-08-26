@@ -648,6 +648,7 @@ class IQAICurriculumService {
                     }),
                 },
             )
+            console.log("response", response)
 
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`)
@@ -710,11 +711,6 @@ class IQAICurriculumService {
             const data = await response.json()
 
             if (data.success) {
-                // console.log(
-                //     'Learning paths retrieved successfully:',
-                //     data.paths,
-                // )
-                // The API returns paths directly in data.paths
                 const pathsData = data.paths || []
                 return { success: true, paths: pathsData }
             } else {
@@ -734,13 +730,11 @@ class IQAICurriculumService {
         }
     }
 
-    // Get a specific learning path by ID
     async getLearningPathById(
         pathId: string,
         userId?: string,
     ): Promise<{ success: boolean; learningPath?: any; error?: string }> {
         try {
-            // console.log('Fetching learning path by ID:', pathId)
 
             const queryParams = new URLSearchParams()
             if (userId) queryParams.append('userId', userId)
@@ -763,10 +757,7 @@ class IQAICurriculumService {
             const data = await response.json()
 
             if (data.success) {
-                // console.log(
-                //     'Learning path retrieved successfully:',
-                //     data.result,
-                // )
+            
                 return { success: true, learningPath: data.result }
             } else {
                 throw new Error(
@@ -798,12 +789,7 @@ class IQAICurriculumService {
         },
     ): Promise<{ success: boolean; error?: string }> {
         try {
-            // console.log('Saving progress to server...', {
-            //     pathId,
-            //     slug,
-            //     progressData,
-            // })
-
+      
             const response = await fetch(
                 'http://localhost:3001/save-progress',
                 {
@@ -826,7 +812,6 @@ class IQAICurriculumService {
             const data = await response.json()
 
             if (data.success) {
-                // console.log('Progress saved successfully:', data.result)
                 return { success: true }
             } else {
                 throw new Error(data.error || 'Failed to save progress')
@@ -849,7 +834,6 @@ class IQAICurriculumService {
         slug: string,
     ): Promise<{ success: boolean; progress?: any; error?: string }> {
         try {
-            // console.log('Fetching progress from server...', { pathId, slug })
 
             const response = await fetch(
                 `http://localhost:3001/get-progress?pathId=${encodeURIComponent(
@@ -870,7 +854,6 @@ class IQAICurriculumService {
             const data = await response.json()
 
             if (data.success) {
-                // console.log('Progress retrieved successfully:', data.progress)
                 return { success: true, progress: data.progress }
             } else {
                 throw new Error(data.error || 'Failed to retrieve progress')

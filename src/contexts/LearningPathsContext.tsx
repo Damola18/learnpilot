@@ -8,6 +8,7 @@ export interface LearningPath {
   title: string;
   description: string;
   progress: number;
+  previousProgress?: number; 
   totalModules: number;
   completedModules: number;
   difficulty: string;
@@ -32,6 +33,9 @@ interface LearningPathsContextType {
   getActivePaths: () => number;
   getCompletedPaths: () => number;
   getTotalHours: () => number;
+  getTotalStudyTime: () => number;    
+  getWeeklyStudyTime: () => number;   
+  getCompletedCourses: () => number;
 }
 
 const LearningPathsContext = createContext<LearningPathsContextType | undefined>(undefined);
@@ -45,7 +49,6 @@ const difficultyColors = {
 const generateTags = (domain: string, experienceLevel: string): string[] => {
   const tags = [experienceLevel];
   
-  // Add domain-specific tags
   switch (domain) {
     case "Frontend Development":
       tags.push("Frontend", "JavaScript", "React");
@@ -81,14 +84,12 @@ export function LearningPathsProvider({ children }: { children: ReactNode }) {
     getPathProgress,
 } = usePathProgress()
 
-  // Load paths from server on mount
   useEffect(() => {
     const loadPaths = async () => {
         try {
             const response = await iqaiCurriculumService.getStoredLearningPaths();
             if (response && response.paths) {
                 const formattedPaths = response.paths.map((path: any) => {
-                    // Calculate initial completed modules count
                     let completedModuleCount = 0;
                     if (path.curriculum?.modules) {
                         const pathProgress = getPathProgress(path.id, path.title
@@ -182,11 +183,38 @@ export function LearningPathsProvider({ children }: { children: ReactNode }) {
 
     setPaths(prev => [newPath, ...prev]);
   };
-
+  const extractHours = (timeStr: string): number => {
+    const match = timeStr.match(/(\d+)\s*hours?/);
+    return match ? parseInt(match[1]) : 0;
+  };
+  
+  const getTotalStudyTime = () => {
+    return paths.reduce((total, path) => {
+      const hours = extractHours(path.estimatedTime || "0 hours");
+      return total + (hours * path.progress / 100);
+    }, 0);
+  };
+  
+  const getWeeklyStudyTime = () => {
+    const now = new Date();
+    const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+    startOfWeek.setHours(0, 0, 0, 0);
+  
+    return paths.reduce((total, path) => {
+      if (path.lastAccessed && new Date(path.lastAccessed) >= startOfWeek) {
+        const hours = extractHours(path.estimatedTime || "0 hours");
+        const progressIncrement = path.progress - (path.previousProgress || 0);
+        return total + (hours * progressIncrement / 100);
+      }
+      return total;
+    }, 0);
+  };
+  
   const updatePath = (id: string, updates: Partial<LearningPath>) => {
     setPaths(prev => prev.map(path => {
       if (path.id === id) {
         let newStatus = path.status;
+        
         if (updates.progress !== undefined) {
           if (updates.progress === 100) {
             newStatus = "completed";
@@ -195,18 +223,27 @@ export function LearningPathsProvider({ children }: { children: ReactNode }) {
           } else if (!path.progress && !updates.progress) {
             newStatus = "not_started";
           }
+          
+          if (updates.progress !== path.progress) {
+            return {
+              ...path,
+              ...updates,
+              previousProgress: path.progress || 0,
+              status: updates.status || newStatus,
+              lastAccessed: new Date().toISOString()
+            };
+          }
         }
         
-        return { 
-          ...path, 
+        return {
+          ...path,
           ...updates,
-          status: updates.status || newStatus 
+          status: updates.status || newStatus
         };
       }
       return path;
     }));
   };
-
   const getPath = (id: string) => {
     return paths.find(path => path.id === id);
   };
@@ -224,6 +261,9 @@ export function LearningPathsProvider({ children }: { children: ReactNode }) {
     }, 0);
   };
 
+  // Get number of completed courses
+  const getCompletedCourses = () => paths.filter(p => p.status === "completed").length;
+
   return (
     <LearningPathsContext.Provider value={{
       paths,
@@ -233,7 +273,10 @@ export function LearningPathsProvider({ children }: { children: ReactNode }) {
       getTotalPaths,
       getActivePaths,
       getCompletedPaths,
-      getTotalHours
+      getTotalHours,
+      getTotalStudyTime,    
+      getWeeklyStudyTime,   
+      getCompletedCourses,
     }}>
       {children}
     </LearningPathsContext.Provider>

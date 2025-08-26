@@ -3,6 +3,7 @@ import { Progress as ProgressBar } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, Clock, Target, TrendingUp, BookOpen, Award } from "lucide-react";
 import { useLearningPaths } from "@/contexts/LearningPathsContext";
+import { usePathProgress } from "@/contexts/PathProgressContext";
 export interface ProgressData {
   subject: string;
   progress: number;
@@ -11,28 +12,62 @@ export interface ProgressData {
 }
 
 const Progress = () => {
-    const {
-    paths,
-  } = useLearningPaths()
-const progressData: ProgressData[] = paths.map((path) => {
-  const progress = Math.round((path.completedModules / path.totalModules) * 100) || 0;
-  return {
-    subject: path.title,
-    progress: progress,
-    timeSpent: path.estimatedTime,
-    badge: path.difficulty,
-  };
-});
+  const { paths } = useLearningPaths()
 
-  const weeklyStats = [
-    { day: "Mon", hours: 2.5 },
-    { day: "Tue", hours: 1.5 },
-    { day: "Wed", hours: 3.0 },
-    { day: "Thu", hours: 2.0 },
-    { day: "Fri", hours: 1.0 },
-    { day: "Sat", hours: 4.0 },
-    { day: "Sun", hours: 2.5 },
-  ];
+  const {
+    getPathProgress,
+    calculateProgress
+  } = usePathProgress();
+
+  const progressData: ProgressData[] = paths.map((path) => {
+    const progress = Math.round((path.completedModules / path.totalModules) * 100) || 0;
+    return {
+      subject: path.title,
+      progress: progress,
+      timeSpent: path.estimatedTime,
+      badge: path.difficulty,
+    };
+  });
+
+  const now = new Date();
+  const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+  startOfWeek.setHours(0, 0, 0, 0);
+
+  const weeklyStats = Array.from({ length: 7 }, (_, i) => {
+    const date = new Date(startOfWeek);
+    date.setDate(date.getDate() + i);
+    
+    const hoursForDay = paths.reduce((total, path) => {
+      if (!path.lastAccessed) return total;
+      
+      const accessDate = new Date(path.lastAccessed);
+
+      if (
+        accessDate.getDate() === date.getDate() &&
+        accessDate.getMonth() === date.getMonth() &&
+        accessDate.getFullYear() === date.getFullYear()
+      ) {
+
+        const hours = extractHours(path.estimatedTime || "0 hours");
+        
+        const currentProgress = path.progress || 0;
+        const previousProgress = path.previousProgress || 0;
+        const progressIncrement = Math.max(0, currentProgress - previousProgress);
+        
+        const studyTime = (hours * progressIncrement) / 100;
+        console.log(`Day ${date.toDateString()}: Progress from ${previousProgress}% to ${currentProgress}% = ${studyTime}h`);
+        
+        return total + studyTime;
+      }
+      return total;
+    }, 0);
+
+    return {
+      day: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()],
+      hours: Number(hoursForDay.toFixed(1)) 
+    };
+  });
+
 
 
   return (
@@ -42,54 +77,6 @@ const progressData: ProgressData[] = paths.map((path) => {
         <p className="text-muted-foreground mt-2">Track your learning journey and achievements</p>
       </div>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Study Time</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">62.5h</div>
-            <p className="text-xs text-success">+12% from last week</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Courses Completed</CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">3</div>
-            <p className="text-xs text-success">+1 this month</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Current Streak</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">15 days</div>
-            <p className="text-xs text-primary">Keep it up!</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Achievements</CardTitle>
-            <Award className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">8</div>
-            <p className="text-xs text-muted-foreground">Badges earned</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Current Learning Progress */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -123,7 +110,6 @@ const progressData: ProgressData[] = paths.map((path) => {
         </CardContent>
       </Card>
 
-      {/* Weekly Activity */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -134,14 +120,17 @@ const progressData: ProgressData[] = paths.map((path) => {
         </CardHeader>
         <CardContent>
           <div className="flex items-end justify-between h-32 gap-2">
-            {weeklyStats.map((stat, index) => (
+          {weeklyStats.map((stat, index) => (
               <div key={index} className="flex flex-col items-center gap-2 flex-1">
-                <div 
-                  className="bg-primary/20 hover:bg-primary/30 transition-colors rounded-t-md w-full"
-                  style={{ height: `${(stat.hours / 4) * 100}%` }}
+                <div
+                  className="w-full bg-primary rounded-sm"
+                  style={{
+                    height: `${(stat.hours / Math.max(...weeklyStats.map(s => s.hours))) * 100}%`,
+                    minHeight: '4px'
+                  }}
                 />
-                <div className="text-xs text-muted-foreground">{stat.day}</div>
-                <div className="text-xs font-medium">{stat.hours}h</div>
+                <span className="text-xs font-medium">{stat.day}</span>
+                <span className="text-xs text-muted-foreground">{stat.hours.toFixed(1)}h</span>
               </div>
             ))}
           </div>
@@ -152,3 +141,9 @@ const progressData: ProgressData[] = paths.map((path) => {
 };
 
 export default Progress;
+
+
+const extractHours = (timeStr: string): number => {
+  const match = timeStr.match(/(\d+)\s*hours?/);
+  return match ? parseInt(match[1]) : 0;
+};

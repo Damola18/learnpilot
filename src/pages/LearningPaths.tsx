@@ -418,24 +418,19 @@ export default function LearningPaths() {
         learningPaths.filter((p) => p.status === 'completed').length
     const getTotalHours = () => {
         return learningPaths.reduce((total, path) => {
-            // Handle duration formats like "72 hours", "20 hours", "2 weeks (~20 hours)"
             if (!path.duration) return total
 
             const durationStr = path.duration.toString()
 
-            // First try to extract hours from parentheses like "(~20 hours)"
             const hoursInParenMatch = durationStr.match(/\(~?(\d+)\s*hours?\)/i)
             if (hoursInParenMatch) {
                 return total + parseInt(hoursInParenMatch[1])
             }
 
-            // Then try direct hours match like "72 hours"
             const hoursMatch = durationStr.match(/(\d+)\s*hours?/i)
             if (hoursMatch) {
                 return total + parseInt(hoursMatch[1])
             }
-
-            // Fallback: get first number
             const numberMatch = durationStr.match(/(\d+)/)
             const hours = numberMatch ? parseInt(numberMatch[1]) : 2
 
@@ -444,7 +439,6 @@ export default function LearningPaths() {
     }
 
     const filteredPaths = learningPaths.filter((path) => {
-
         const matchesSearch =
             path.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
             path.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -495,7 +489,6 @@ export default function LearningPaths() {
     }
 
     const handleArchivePath = (path: LearningPath) => {
-        // Simulate archiving
         toast({
             title: 'Path Archived',
             description: `"${path.title}" has been archived successfully.`,
@@ -503,7 +496,6 @@ export default function LearningPaths() {
     }
 
     const handleSaveEdit = () => {
-        // Simulate saving changes
         toast({
             title: 'Changes Saved',
             description: `"${selectedPath?.title}" has been updated successfully.`,
