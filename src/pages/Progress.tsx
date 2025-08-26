@@ -18,7 +18,7 @@ const Progress = () => {
   } = useLearningPaths()
 
 const progressData: ProgressData[] = paths.map((path) => ({
-  subject: path.description,
+  subject: path.title,
   progress: path.progress,
   timeSpent: path.estimatedTime,
   badge: path.difficulty,
@@ -111,10 +111,12 @@ const progressData: ProgressData[] = paths.map((path) => ({
                   {item.timeSpent}
                 </div>
               </div>
-              <p className="text-xs" >Progress:</p>
+              <p className="text-xs">
+                Progress:{" "}
+                <span className="text-sm font-medium text-primary">{item.progress}%</span>
+              </p>
               <div className="flex items-center gap-3">
                 <ProgressBar value={item.progress} className="flex-1 h-2 " />
-                <span className="text-sm font-medium text-primary">{item.progress}%</span>
               </div>
             </div>
           ))}
