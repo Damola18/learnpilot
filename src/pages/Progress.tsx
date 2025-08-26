@@ -3,8 +3,6 @@ import { Progress as ProgressBar } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, Clock, Target, TrendingUp, BookOpen, Award } from "lucide-react";
 import { useLearningPaths } from "@/contexts/LearningPathsContext";
-
-
 export interface ProgressData {
   subject: string;
   progress: number;
@@ -16,13 +14,15 @@ const Progress = () => {
     const {
     paths,
   } = useLearningPaths()
-
-const progressData: ProgressData[] = paths.map((path) => ({
-  subject: path.title,
-  progress: path.progress,
-  timeSpent: path.estimatedTime,
-  badge: path.difficulty,
-}));
+const progressData: ProgressData[] = paths.map((path) => {
+  const progress = Math.round((path.completedModules / path.totalModules) * 100) || 0;
+  return {
+    subject: path.title,
+    progress: progress,
+    timeSpent: path.estimatedTime,
+    badge: path.difficulty,
+  };
+});
 
   const weeklyStats = [
     { day: "Mon", hours: 2.5 },
