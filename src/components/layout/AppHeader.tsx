@@ -78,8 +78,8 @@ export function AppHeader() {
         <div className="flex items-center gap-3">
           <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-warning-muted border border-warning/20">
             <Zap className="w-4 h-4 text-warning" />
-            <span className="text-sm font-medium text-warning-foreground">
-              7 day streak
+            <span className="text-sm font-medium text-warning-foreground animate-pulse">
+              1 Day streak
             </span>
           </div>
 

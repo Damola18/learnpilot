@@ -44,7 +44,9 @@ export default function Index() {
       <header className="border-b border-border/40 bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <GraduationCap className="w-8 h-8 text-primary" />
+            <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
+              <GraduationCap className="w-6 h-6 dark:text-white text-white" />
+            </div>
             <span className="font-satoshi font-bold text-xl">LearnPilot</span>
           </div>
 

@@ -15,6 +15,7 @@ import {
     Download,
     Edit,
     Eye,
+    Book,
     Archive,
     CheckCircle,
     RefreshCw,
@@ -308,7 +309,7 @@ export default function LearningPaths() {
                         progress: progress,
                         completedModules: completedModuleCount,
                         totalModules: path.curriculum?.modules?.length || 0,
-                        rating: 4.5, // Default rating
+                        rating: 4.5, 
                         author: 'AI Generated',
                         thumbnail: '/placeholder.svg',
                         learningOutcomes: path.curriculum?.objectives || [],
@@ -811,7 +812,7 @@ export default function LearningPaths() {
                                                 }
                                             >
                                                 <Download className='w-4 h-4 mr-2' />
-                                                Download Progress
+                                                Download Path
                                             </DropdownMenuItem>
                                             <DropdownMenuSeparator />
                                             <DropdownMenuItem
@@ -824,7 +825,7 @@ export default function LearningPaths() {
                                                 className='text-destructive'
                                             >
                                                 <Archive className='w-4 h-4 mr-2' />
-                                                Archive Path
+                                                Delete Path
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
@@ -879,12 +880,8 @@ export default function LearningPaths() {
                                             <span>{path.difficulty}</span>
                                         </div>
                                         <div className='flex items-center gap-1'>
-                                            <Users className='w-4 h-4' />
+                                            <Book className='w-4 h-4' />
                                             <span>{path.lessons} lessons</span>
-                                        </div>
-                                        <div className='flex items-center gap-1'>
-                                            <Star className='w-4 h-4 fill-current text-warning' />
-                                            <span>{path.rating}</span>
                                         </div>
                                     </div>
 
@@ -1003,20 +1000,6 @@ export default function LearningPaths() {
                             <span className='text-sm'>
                                 {selectedPath?.lastAccessed}
                             </span>
-                        </div>
-                        <div className='space-y-2'>
-                            <h4 className='text-sm font-semibold'>Tags:</h4>
-                            <div className='flex flex-wrap gap-2'>
-                                {selectedPath?.tags?.map((tag: string) => (
-                                    <Badge
-                                        key={tag}
-                                        variant='outline'
-                                        className='text-xs'
-                                    >
-                                        {tag}
-                                    </Badge>
-                                ))}
-                            </div>
                         </div>
                     </div>
                     <DialogFooter>

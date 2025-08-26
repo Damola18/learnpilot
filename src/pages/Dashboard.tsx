@@ -23,10 +23,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLearningPaths } from "@/contexts/LearningPathsContext";
 import { usePathProgress } from "@/contexts/PathProgressContext";
 
-
-
-
-
 export default function Dashboard() {
   const [currentTime] = useState(new Date());
   const { user } = useAuth();
@@ -39,14 +35,63 @@ export default function Dashboard() {
     calculateProgress
   } = usePathProgress();
 
-
-
   const greeting =
     currentTime.getHours() < 12
       ? "Good morning"
       : currentTime.getHours() < 17
         ? "Good afternoon"
         : "Good evening";
+
+  const calculateLearningStreak = () => {
+    const today = new Date();
+    const completionDates = new Set<string>();
+
+    paths.forEach(path => {
+      const pathSlug = path.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+      
+      const pathProgress = getPathProgress(path.id, pathSlug);
+      
+      if (pathProgress) {
+        Object.values(pathProgress.items).forEach(item => {
+          if (item.status === 'done' && item.completedAt) {
+            const completionDate = new Date(item.completedAt);
+            const dateStr = completionDate.toISOString().split('T')[0];
+            completionDates.add(dateStr);
+          }
+        });
+      }
+    });
+
+
+    let streak = 0;
+    const currentDate = new Date(today);
+    
+
+    const todayStr = today.toISOString().split('T')[0];
+    const checkingToday = completionDates.has(todayStr);
+    
+    if (!checkingToday) {
+      currentDate.setDate(currentDate.getDate() - 1);
+    }
+
+    while (true) {
+      const dateStr = currentDate.toISOString().split('T')[0];
+      
+      if (completionDates.has(dateStr)) {
+        streak++;
+        currentDate.setDate(currentDate.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+
+    return streak;
+  };
+
+  const learningStreak = calculateLearningStreak();
 
   const weeklyStudyTime = paths.reduce((total, path) => {
     const pathSlug = path.title
@@ -86,9 +131,6 @@ export default function Dashboard() {
       .length;
   }, 0);
 
-
-
-    
   return (
     <div className="p-6 space-y-8 mx-auto">
       <div className="space-y-4">
@@ -117,13 +159,15 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card className="border-0 shadow-card bg-cyan-200/10 ">
             <CardContent className="p-6 rounded-md border border--neutral-700">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm opacity-90">Learning Streak</p>
-                  <p className="text-2xl font-bold">7 Days</p>
+                  <p className="text-2xl font-bold">
+                    {learningStreak} {learningStreak === 1 ? 'Day' : 'Days'}
+                  </p>
                 </div>
                 <Zap className="w-8 h-8 text-primary" />
               </div>
@@ -154,17 +198,6 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-card">
-            <CardContent className="p-6 rounded-md border border--neutral-700">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Path Items Completed</p>
-                  <p className="text-2xl font-bold text-foreground">{skillsGained}</p>
-                </div>
-                <TrendingUp className="w-6 h-6 text-slate-400" />
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
 
@@ -201,6 +234,7 @@ export default function Dashboard() {
                           {path.difficulty}
                         </Badge>
                       </div>
+                      
                       <p className="text-sm lg:text-base text-muted-foreground mb-3">
                         {path.description}
                       </p>
@@ -228,7 +262,6 @@ export default function Dashboard() {
               )}
             </CardContent>
           </Card>
-          
         </div>
       </div>
     </div>

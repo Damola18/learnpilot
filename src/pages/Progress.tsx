@@ -1,74 +1,150 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress as ProgressBar } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays, Clock, Target, TrendingUp, BookOpen, Award } from "lucide-react";
+import { CalendarDays, Clock, Target } from "lucide-react";
 import { useLearningPaths } from "@/contexts/LearningPathsContext";
 import { usePathProgress } from "@/contexts/PathProgressContext";
-export interface ProgressData {
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+interface PathProgress {
+  items: Record<string, { status: string; completedAt?: string }>;
+  lastAccessed?: string;
+}
+
+interface ProgressData {
   subject: string;
   progress: number;
   timeSpent: string;
   badge: string;
 }
 
+interface WeeklyStat {
+  day: string;
+  hours: number;
+  date: string;
+}
+
 const Progress = () => {
-  const { paths } = useLearningPaths()
+  const { paths } = useLearningPaths();
+  const { getPathProgress, calculateProgress } = usePathProgress();
 
-  const {
-    getPathProgress,
-    calculateProgress
-  } = usePathProgress();
-
-  const progressData: ProgressData[] = paths.map((path) => {
-    const progress = Math.round((path.completedModules / path.totalModules) * 100) || 0;
+  const pathsProgressData: ProgressData[] = paths.map((path) => {
+    const pathSlug = path.title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+    
+    const { progress } = calculateProgress(path.id, pathSlug);
+    
     return {
       subject: path.title,
       progress: progress,
-      timeSpent: path.estimatedTime,
+      timeSpent: path.estimatedTime || '0 hours',
       badge: path.difficulty,
     };
   });
 
+  // Helper function to extract hours from duration strings
+  const extractHours = (timeStr: string): number => {
+    const hoursMatch = timeStr.match(/(\d+)\s*hours?/i);
+    if (hoursMatch) {
+      return parseInt(hoursMatch[1]);
+    }
+    const minutesMatch = timeStr.match(/(\d+)\s*min/i);
+    if (minutesMatch) {
+      return parseInt(minutesMatch[1]) / 60;
+    }
+    const numberMatch = timeStr.match(/(\d+)/);
+    return numberMatch ? parseInt(numberMatch[1]) : 0;
+  };
+
+  // Calculate weekly stats based on individual item completions
   const now = new Date();
-  const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - now.getDay());
   startOfWeek.setHours(0, 0, 0, 0);
 
-  const weeklyStats = Array.from({ length: 7 }, (_, i) => {
+  const weeklyStats: WeeklyStat[] = Array.from({ length: 7 }, (_, i) => {
     const date = new Date(startOfWeek);
     date.setDate(date.getDate() + i);
+    date.setHours(0, 0, 0, 0);
     
     const hoursForDay = paths.reduce((total, path) => {
-      if (!path.lastAccessed) return total;
+      const pathSlug = path.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
       
-      const accessDate = new Date(path.lastAccessed);
+      const pathProgress = getPathProgress(path.id, pathSlug);
+      if (!pathProgress || !pathProgress.items) return total;
 
-      if (
-        accessDate.getDate() === date.getDate() &&
-        accessDate.getMonth() === date.getMonth() &&
-        accessDate.getFullYear() === date.getFullYear()
-      ) {
+      // Get total hours for this path
+      const pathHours = extractHours(path.estimatedTime || "0 hours");
+      
+      // Calculate current progress percentage
+      const { progress } = calculateProgress(path.id, pathSlug);
+      
+      // Only count hours if there's actual progress
+      if (progress === 0) return total;
+      
 
-        const hours = extractHours(path.estimatedTime || "0 hours");
+      const completedItemsOnDate = Object.values(pathProgress.items).filter(item => {
+        if (item.status !== 'done' || !item.completedAt) return false;
         
-        const currentProgress = path.progress || 0;
-        const previousProgress = path.previousProgress || 0;
-        const progressIncrement = Math.max(0, currentProgress - previousProgress);
+        const completedDate = new Date(item.completedAt);
+        return (
+          completedDate.getDate() === date.getDate() &&
+          completedDate.getMonth() === date.getMonth() &&
+          completedDate.getFullYear() === date.getFullYear()
+        );
+      }).length;
+
+      const totalItems = Object.keys(pathProgress.items).length;
+      if (totalItems > 0 && completedItemsOnDate > 0) {
+        const actualHoursInvested = (pathHours * progress) / 100;
+        const totalCompletedItems = Object.values(pathProgress.items).filter(item => item.status === 'done').length;
+        const hoursPerCompletedItem = totalCompletedItems > 0 ? actualHoursInvested / totalCompletedItems : 0;
+        const dayHours = hoursPerCompletedItem * completedItemsOnDate;
         
-        const studyTime = (hours * progressIncrement) / 100;
-        console.log(`Day ${date.toDateString()}: Progress from ${previousProgress}% to ${currentProgress}% = ${studyTime}h`);
+        console.log(`${path.title} on ${date.toDateString()}:`, {
+          pathHours,
+          progress: `${progress}%`,
+          actualHoursInvested,
+          totalCompletedItems,
+          completedItemsOnDate,
+          hoursPerCompletedItem,
+          dayHours
+        });
         
-        return total + studyTime;
+        return total + dayHours;
       }
+      
       return total;
     }, 0);
 
     return {
       day: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()],
-      hours: Number(hoursForDay.toFixed(1)) 
+      hours: Math.round(hoursForDay * 10) / 10,
+      date: date.toISOString()
     };
   });
 
+  console.log('Weekly Stats (based on item completions):', weeklyStats);
 
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+          <p className="font-medium">{`${label}`}</p>
+          <p className="text-primary">
+            {`Hours: ${payload[0].value}h`}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
     <div className="p-8 space-y-8">
@@ -86,11 +162,11 @@ const Progress = () => {
           <CardDescription>Your progress in active learning paths</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {progressData.map((item, index) => (
-            <div key={index} className="space-y-2 p-3 border border-slate-200 rounded-xl ">
+          {pathsProgressData.map((item, index) => (
+            <div key={index} className="space-y-2 p-3 border border-slate-200 rounded-xl">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <h4 className=" text-lg font-medium">{item.subject}</h4>
+                  <h4 className="text-lg font-medium">{item.subject}</h4>
                   <Badge variant="secondary" className="text-xs">{item.badge}</Badge>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -103,36 +179,55 @@ const Progress = () => {
                 <span className="text-sm font-medium text-primary">{item.progress}%</span>
               </p>
               <div className="flex items-center gap-3">
-                <ProgressBar value={item.progress} className="flex-1 h-2 " />
+                <ProgressBar value={item.progress} className="flex-1 h-2" />
               </div>
             </div>
           ))}
         </CardContent>
       </Card>
-
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CalendarDays className="h-5 w-5 text-primary" />
             Weekly Activity
           </CardTitle>
-          <CardDescription>Hours spent learning this week</CardDescription>
+          <CardDescription>Hours spent learning this week (based on completed items)</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-end justify-between h-32 gap-2">
-          {weeklyStats.map((stat, index) => (
-              <div key={index} className="flex flex-col items-center gap-2 flex-1">
-                <div
-                  className="w-full bg-primary rounded-sm"
-                  style={{
-                    height: `${(stat.hours / Math.max(...weeklyStats.map(s => s.hours))) * 100}%`,
-                    minHeight: '4px'
-                  }}
+          <div className="h-48 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={weeklyStats}
+                margin={{
+                  top: 0,
+                  right: 30,
+                  left: 20,
+                  bottom: 0,
+                }}
+                maxBarSize={40}
+              >
+                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                <XAxis 
+                  dataKey="day" 
+                  axisLine={false}
+                  tickLine={false}
+                  className="text-sm text-muted-foreground"
                 />
-                <span className="text-xs font-medium">{stat.day}</span>
-                <span className="text-xs text-muted-foreground">{stat.hours.toFixed(1)}h</span>
-              </div>
-            ))}
+                <YAxis 
+                  axisLine={false}
+                  tickLine={false}
+                  className="text-sm text-muted-foreground"
+                  label={{ value: 'Hours', angle: -90, position: 'insideLeft' }}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar 
+                  dataKey="hours" 
+                  fill="hsl(var(--primary))" 
+                  radius={[4, 4, 0, 0]}
+                  minPointSize={2}
+                />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </CardContent>
       </Card>
@@ -141,9 +236,3 @@ const Progress = () => {
 };
 
 export default Progress;
-
-
-const extractHours = (timeStr: string): number => {
-  const match = timeStr.match(/(\d+)\s*hours?/);
-  return match ? parseInt(match[1]) : 0;
-};

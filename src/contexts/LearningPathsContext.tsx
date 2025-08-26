@@ -84,12 +84,14 @@ export function LearningPathsProvider({ children }: { children: ReactNode }) {
     getPathProgress,
 } = usePathProgress()
 
+  // Load paths from server on mount
   useEffect(() => {
     const loadPaths = async () => {
         try {
             const response = await iqaiCurriculumService.getStoredLearningPaths();
             if (response && response.paths) {
                 const formattedPaths = response.paths.map((path: any) => {
+                    // Calculate initial completed modules count
                     let completedModuleCount = 0;
                     if (path.curriculum?.modules) {
                         const pathProgress = getPathProgress(path.id, path.title
@@ -183,6 +185,46 @@ export function LearningPathsProvider({ children }: { children: ReactNode }) {
 
     setPaths(prev => [newPath, ...prev]);
   };
+
+  const oldupdatePath = (id: string, updates: Partial<LearningPath>) => {
+    setPaths(prev => prev.map(path => {
+      if (path.id === id) {
+        let newStatus = path.status;
+        if (updates.progress !== undefined) {
+          if (updates.progress === 100) {
+            newStatus = "completed";
+          } else if (updates.progress > 0) {
+            newStatus = "active";
+          } else if (!path.progress && !updates.progress) {
+            newStatus = "not_started";
+          }
+        }
+        
+        return { 
+          ...path, 
+          ...updates,
+          status: updates.status || newStatus 
+        };
+      }
+      return path;
+    }));
+  };
+
+  // const updatePath = (id: string, updates: Partial<LearningPath>) => {
+  //   setPaths(prev => prev.map(path => {
+  //     if (path.id === id) {
+  //       if (updates.progress !== undefined && updates.progress !== path.progress) {
+  //         return {
+  //           ...path,
+  //           ...updates,
+  //           previousProgress: path.progress
+  //         };
+  //       }
+  //       return { ...path, ...updates };
+  //     }
+  //     return path;
+  //   }));
+  // };
   const extractHours = (timeStr: string): number => {
     const match = timeStr.match(/(\d+)\s*hours?/);
     return match ? parseInt(match[1]) : 0;
@@ -215,6 +257,7 @@ export function LearningPathsProvider({ children }: { children: ReactNode }) {
       if (path.id === id) {
         let newStatus = path.status;
         
+        // Handle status updates based on progress
         if (updates.progress !== undefined) {
           if (updates.progress === 100) {
             newStatus = "completed";
@@ -224,6 +267,8 @@ export function LearningPathsProvider({ children }: { children: ReactNode }) {
             newStatus = "not_started";
           }
           
+          // Store previous progress when progress changes and update lastAccessed
+          // Only update if there's actual progress change
           if (updates.progress !== path.progress) {
             return {
               ...path,
@@ -235,6 +280,7 @@ export function LearningPathsProvider({ children }: { children: ReactNode }) {
           }
         }
         
+        // For non-progress updates
         return {
           ...path,
           ...updates,
@@ -260,6 +306,31 @@ export function LearningPathsProvider({ children }: { children: ReactNode }) {
       return acc + hours;
     }, 0);
   };
+
+  // const getTotalStudyTime = () => {
+  //   return paths.reduce((total, path) => {
+  //     const timeStr = path.estimatedTime || "0h";
+  //     const hours = parseInt(timeStr) || 0;
+  //     return total + (hours * path.progress / 100);
+  //   }, 0);
+  // };
+
+  // // Calculate this week's study time
+  // const getWeeklyStudyTime = () => {
+  //   const now = new Date();
+  //   const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+  //   startOfWeek.setHours(0, 0, 0, 0);
+
+  //   return paths.reduce((total, path) => {
+  //     if (path.lastAccessed && new Date(path.lastAccessed) >= startOfWeek) {
+  //       const timeStr = path.estimatedTime || "0h";
+  //       const hours = parseInt(timeStr) || 0;
+  //       const progressIncrement = path.progress - (path.previousProgress || 0);
+  //       return total + (hours * progressIncrement / 100);
+  //     }
+  //     return total;
+  //   }, 0);
+  // };
 
   // Get number of completed courses
   const getCompletedCourses = () => paths.filter(p => p.status === "completed").length;
