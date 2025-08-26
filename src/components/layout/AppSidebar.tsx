@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import {
   Home,
   BookOpen,
@@ -27,21 +27,18 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+
 
 const navigationItems = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
   { title: "My Paths", url: "/dashboard/paths", icon: BookOpen },
   { title: "Progress", url: "/dashboard/progress", icon: BarChart3 },
   { title: "AI Mentor", url: "/dashboard/mentor", icon: MessageCircle },
-  { title: "Resources", url: "/dashboard/resources", icon: Library },
 ];
 
 const quickActions = [
   { title: "Create Path", url: "/dashboard/create-path", icon: Target },
   { title: "Take Assessment", url: "/dashboard/assessment", icon: Brain },
-  { title: "Achievements", url: "/dashboard/achievements", icon: Trophy },
 ];
 
 export function AppSidebar() {
@@ -59,19 +56,19 @@ export function AppSidebar() {
   return (
     <Sidebar className={collapsed ? "w-16" : "w-64"} collapsible="icon">
       <SidebarHeader className="p-4 border-b border-sidebar-border">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-            <GraduationCap className="w-8 h-8 dark:text-white text-sidebar-foreground/60" />
-          </div>
-          {!collapsed && (
-            <div>
-              <h1 className="text-lg font-bold text-sidebar-foreground">
-                LearnPilot
-              </h1>
-            </div>
-          )}
+      <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+        <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
+          <GraduationCap className="w-6 h-6 dark:text-white text-white" />
         </div>
-      </SidebarHeader>
+        {!collapsed && (
+          <div>
+            <h1 className="text-lg font-bold text-sidebar-foreground">
+              LearnPilot
+            </h1>
+          </div>
+        )}
+      </Link>
+    </SidebarHeader>
 
       <SidebarContent className="px-2">
         <SidebarGroup>
@@ -99,7 +96,6 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Quick Actions */}
         <SidebarGroup>
           <SidebarGroupLabel className="px-3 text-sidebar-foreground/60">
             {!collapsed && "Quick Actions"}
@@ -124,35 +120,13 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
-        {/* Progress Overview */}
-        {!collapsed && (
-          <SidebarGroup>
-            <SidebarGroupLabel className="px-3 text-sidebar-foreground/60">
-              Weekly Progress
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <div className="px-3 py-2 space-y-3">
-                <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-warning" />
-                  <span className="text-sm font-medium">12h 30m</span>
-                  <span className="text-xs text-muted-foreground">/ 15h</span>
-                </div>
-                <Progress value={83} className="h-2" />
-                <p className="text-xs text-muted-foreground">
-                  Great progress! You're 83% to your weekly goal.
-                </p>
-              </div>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
       </SidebarContent>
 
       <SidebarFooter className="p-4 border-t border-sidebar-border">
         <SidebarMenuItem>
           <SidebarMenuButton asChild className="h-11">
             <NavLink
-              to="/settings"
+              to="/dashboard/settings"
               className={`flex items-center gap-3 px-3 rounded-lg transition-all ${getNavClass(
                 "/settings"
               )}`}

@@ -20,9 +20,6 @@ export function AppHeader() {
   const [isDark, setIsDark] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  
-
- 
 
   const getAvatarUrl = () => {
     const metadata = user?.user_metadata || {};
@@ -68,7 +65,7 @@ export function AppHeader() {
       <div className="flex items-center justify-between px-6 h-full">
         <div className="flex items-center gap-4">
           <SidebarTrigger className="hover:bg-accent hover:text-accent-foreground" />
-          
+
           <div className="relative max-w-md w-full">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -80,9 +77,9 @@ export function AppHeader() {
 
         <div className="flex items-center gap-3">
           <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-warning-muted border border-warning/20">
-            <Zap className="w-4 h-4 text-warning" />
-            <span className="text-sm font-medium text-warning-foreground">
-              7 day streak
+            <Zap className="w-4 h-4 text-primary animate-pulse" />
+            <span className="text-sm font-medium text-warning-foreground ">
+              1 Day streak
             </span>
           </div>
 

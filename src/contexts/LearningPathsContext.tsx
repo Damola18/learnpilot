@@ -1,18 +1,20 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { GeneratedLearningPath } from "@/services/iqaiCurriculumService";
+import { GeneratedLearningPath, iqaiCurriculumService } from "@/services/iqaiCurriculumService";
 import { parseDurationToHours } from "@/utils/durationUtils";
+import { usePathProgress } from '@/contexts/PathProgressContext';  
 
-interface LearningPath {
+export interface LearningPath {
   id: string;
   title: string;
   description: string;
   progress: number;
+  previousProgress?: number; 
   totalModules: number;
   completedModules: number;
   difficulty: string;
   estimatedTime: string;
   category: string;
-  status: "active" | "completed" | "not_started";
+  status: "not_started" | "active" | "completed";
   rating: number;
   enrollments: number;
   color: string;
@@ -31,6 +33,9 @@ interface LearningPathsContextType {
   getActivePaths: () => number;
   getCompletedPaths: () => number;
   getTotalHours: () => number;
+  getTotalStudyTime: () => number;    
+  getWeeklyStudyTime: () => number;   
+  getCompletedCourses: () => number;
 }
 
 const LearningPathsContext = createContext<LearningPathsContextType | undefined>(undefined);
@@ -44,7 +49,6 @@ const difficultyColors = {
 const generateTags = (domain: string, experienceLevel: string): string[] => {
   const tags = [experienceLevel];
   
-  // Add domain-specific tags
   switch (domain) {
     case "Frontend Development":
       tags.push("Frontend", "JavaScript", "React");
@@ -75,12 +79,82 @@ const generateTags = (domain: string, experienceLevel: string): string[] => {
 };
 
 export function LearningPathsProvider({ children }: { children: ReactNode }) {
-  const [paths, setPaths] = useState<LearningPath[]>(() => {
+  const [paths, setPaths] = useState<LearningPath[]>([]);
+  const {
+    getPathProgress,
+} = usePathProgress()
 
-    const saved = localStorage.getItem('learningPaths');
-    return saved ? JSON.parse(saved) : [];
-  });
+  // Load paths from server on mount
+  useEffect(() => {
+    const loadPaths = async () => {
+        try {
+            const response = await iqaiCurriculumService.getStoredLearningPaths();
+            if (response && response.paths) {
+                const formattedPaths = response.paths.map((path: any) => {
+                    // Calculate initial completed modules count
+                    let completedModuleCount = 0;
+                    if (path.curriculum?.modules) {
+                        const pathProgress = getPathProgress(path.id, path.title
+                            .toLowerCase()
+                            .replace(/[^a-z0-9]+/g, '-')
+                            .replace(/(^-|-$)/g, ''));
+                        
+                        if (pathProgress) {
+                            completedModuleCount = path.curriculum.modules.filter((module: any, index: number) => {
+                                const sectionId = module.id || `section-${index}`;
+                                const moduleItems = [
+                                    ...(module.competencies || []).map(
+                                        (_, compIndex: number) => `${sectionId}-competency-${compIndex}`,
+                                    ),
+                                    ...(module.resources || []).map(
+                                        (_, resIndex: number) => `${sectionId}-resource-${resIndex}`,
+                                    ),
+                                    ...(module.assessments || []).map(
+                                        (_, assIndex: number) => `${sectionId}-assessment-${assIndex}`,
+                                    ),
+                                ];
 
+                                if (moduleItems.length === 0) {
+                                    return false;
+                                }
+
+                                return moduleItems.every((itemId) => {
+                                    const itemProgress = pathProgress.items[itemId];
+                                    return itemProgress?.status === 'done';
+                                });
+                            }).length;
+                        }
+                    }
+
+                    return {
+                        id: path.id,
+                        title: path.title,
+                        description: path.description,
+                        progress: 0,
+                        totalModules: path.curriculum?.modules?.length || 0,
+                        completedModules: completedModuleCount,
+                        difficulty: path.difficulty || 'Intermediate',
+                        estimatedTime: calculateDuration(path.curriculum),
+                        category: path.domain || 'General',
+                        status: path.status || 'not_started',
+                        rating: 4.5,
+                        enrollments: 1,
+                        color: difficultyColors[path.difficulty || 'Intermediate'],
+                        tags: path.curriculum?.tags || [],
+                        lastAccessed: path.updated_at ? new Date(path.updated_at).toISOString() : 'Never',
+                        createdAt: path.created_at ? new Date(path.created_at).toISOString() : new Date().toISOString(),
+                        generatedPath: path.curriculum
+                    };
+                });
+                setPaths(formattedPaths);
+            }
+        } catch (error) {
+            console.error('Error loading paths:', error);
+        }
+    };
+
+    loadPaths();
+}, []);
 
   useEffect(() => {
     localStorage.setItem('learningPaths', JSON.stringify(paths));
@@ -112,12 +186,110 @@ export function LearningPathsProvider({ children }: { children: ReactNode }) {
     setPaths(prev => [newPath, ...prev]);
   };
 
-  const updatePath = (id: string, updates: Partial<LearningPath>) => {
-    setPaths(prev => prev.map(path => 
-      path.id === id ? { ...path, ...updates } : path
-    ));
+  const oldupdatePath = (id: string, updates: Partial<LearningPath>) => {
+    setPaths(prev => prev.map(path => {
+      if (path.id === id) {
+        let newStatus = path.status;
+        if (updates.progress !== undefined) {
+          if (updates.progress === 100) {
+            newStatus = "completed";
+          } else if (updates.progress > 0) {
+            newStatus = "active";
+          } else if (!path.progress && !updates.progress) {
+            newStatus = "not_started";
+          }
+        }
+        
+        return { 
+          ...path, 
+          ...updates,
+          status: updates.status || newStatus 
+        };
+      }
+      return path;
+    }));
   };
 
+  // const updatePath = (id: string, updates: Partial<LearningPath>) => {
+  //   setPaths(prev => prev.map(path => {
+  //     if (path.id === id) {
+  //       if (updates.progress !== undefined && updates.progress !== path.progress) {
+  //         return {
+  //           ...path,
+  //           ...updates,
+  //           previousProgress: path.progress
+  //         };
+  //       }
+  //       return { ...path, ...updates };
+  //     }
+  //     return path;
+  //   }));
+  // };
+  const extractHours = (timeStr: string): number => {
+    const match = timeStr.match(/(\d+)\s*hours?/);
+    return match ? parseInt(match[1]) : 0;
+  };
+  
+  const getTotalStudyTime = () => {
+    return paths.reduce((total, path) => {
+      const hours = extractHours(path.estimatedTime || "0 hours");
+      return total + (hours * path.progress / 100);
+    }, 0);
+  };
+  
+  const getWeeklyStudyTime = () => {
+    const now = new Date();
+    const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+    startOfWeek.setHours(0, 0, 0, 0);
+  
+    return paths.reduce((total, path) => {
+      if (path.lastAccessed && new Date(path.lastAccessed) >= startOfWeek) {
+        const hours = extractHours(path.estimatedTime || "0 hours");
+        const progressIncrement = path.progress - (path.previousProgress || 0);
+        return total + (hours * progressIncrement / 100);
+      }
+      return total;
+    }, 0);
+  };
+  
+  const updatePath = (id: string, updates: Partial<LearningPath>) => {
+    setPaths(prev => prev.map(path => {
+      if (path.id === id) {
+        let newStatus = path.status;
+        
+        // Handle status updates based on progress
+        if (updates.progress !== undefined) {
+          if (updates.progress === 100) {
+            newStatus = "completed";
+          } else if (updates.progress > 0) {
+            newStatus = "active";
+          } else if (!path.progress && !updates.progress) {
+            newStatus = "not_started";
+          }
+          
+          // Store previous progress when progress changes and update lastAccessed
+          // Only update if there's actual progress change
+          if (updates.progress !== path.progress) {
+            return {
+              ...path,
+              ...updates,
+              previousProgress: path.progress || 0,
+              status: updates.status || newStatus,
+              lastAccessed: new Date().toISOString()
+            };
+          }
+        }
+        
+        // For non-progress updates
+        return {
+          ...path,
+          ...updates,
+          status: updates.status || newStatus
+        };
+      }
+      return path;
+    }));
+  };
   const getPath = (id: string) => {
     return paths.find(path => path.id === id);
   };
@@ -135,6 +307,34 @@ export function LearningPathsProvider({ children }: { children: ReactNode }) {
     }, 0);
   };
 
+  // const getTotalStudyTime = () => {
+  //   return paths.reduce((total, path) => {
+  //     const timeStr = path.estimatedTime || "0h";
+  //     const hours = parseInt(timeStr) || 0;
+  //     return total + (hours * path.progress / 100);
+  //   }, 0);
+  // };
+
+  // // Calculate this week's study time
+  // const getWeeklyStudyTime = () => {
+  //   const now = new Date();
+  //   const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+  //   startOfWeek.setHours(0, 0, 0, 0);
+
+  //   return paths.reduce((total, path) => {
+  //     if (path.lastAccessed && new Date(path.lastAccessed) >= startOfWeek) {
+  //       const timeStr = path.estimatedTime || "0h";
+  //       const hours = parseInt(timeStr) || 0;
+  //       const progressIncrement = path.progress - (path.previousProgress || 0);
+  //       return total + (hours * progressIncrement / 100);
+  //     }
+  //     return total;
+  //   }, 0);
+  // };
+
+  // Get number of completed courses
+  const getCompletedCourses = () => paths.filter(p => p.status === "completed").length;
+
   return (
     <LearningPathsContext.Provider value={{
       paths,
@@ -144,7 +344,10 @@ export function LearningPathsProvider({ children }: { children: ReactNode }) {
       getTotalPaths,
       getActivePaths,
       getCompletedPaths,
-      getTotalHours
+      getTotalHours,
+      getTotalStudyTime,    
+      getWeeklyStudyTime,   
+      getCompletedCourses,
     }}>
       {children}
     </LearningPathsContext.Provider>
@@ -158,3 +361,54 @@ export function useLearningPaths() {
   }
   return context;
 }
+
+const calculateDuration = (curriculum: any): string => {
+  if (!curriculum?.modules) return '2 hours';
+
+  if (curriculum.totalDuration) {
+    const totalDurationStr = curriculum.totalDuration.toString();
+
+    const hoursInParenMatch = totalDurationStr.match(/\(~?(\d+)\s*hours?\)/i);
+    if (hoursInParenMatch) {
+      const hours = parseInt(hoursInParenMatch[1]);
+      return hours === 1 ? '1 hour' : `${hours} hours`;
+    }
+
+    const directHoursMatch = totalDurationStr.match(/^(\d+)\s*hours?$/i);
+    if (directHoursMatch) {
+      return curriculum.totalDuration;
+    }
+
+    const weeksMatch = totalDurationStr.match(/(\d+)\s*weeks?/i);
+    if (weeksMatch) {
+      const weeks = parseInt(weeksMatch[1]);
+      const estimatedHours = weeks * 10; 
+      return `${estimatedHours} hours`;
+    }
+
+    return curriculum.totalDuration;
+  }
+
+  let totalMinutes = 0;
+  curriculum.modules.forEach((module: any) => {
+    if (module.duration) {
+      const durationStr = module.duration.toString();
+      const hoursMatch = durationStr.match(/(\d+)\s*hours?/i);
+      const minutesMatch = durationStr.match(/(\d+)\s*min/i);
+
+      if (hoursMatch) {
+        totalMinutes += parseInt(hoursMatch[1]) * 60;
+      } else if (minutesMatch) {
+        totalMinutes += parseInt(minutesMatch[1]);
+      } else {
+        const duration = parseInt(durationStr) || 30;
+        totalMinutes += duration;
+      }
+    } else {
+      totalMinutes += 30;
+    }
+  });
+
+  const hours = Math.max(1, Math.ceil(totalMinutes / 60));
+  return hours === 1 ? '1 hour' : `${hours} hours`;
+};

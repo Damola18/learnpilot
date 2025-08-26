@@ -1,3 +1,4 @@
+import { iqaiCurriculumService } from "@/services/iqaiCurriculumService";
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
 interface PathItemProgress {
@@ -21,6 +22,7 @@ interface PathProgressContextType {
   updateItemStatus: (pathId: string, slug: string, itemId: string, status: string) => void;
   initializePathProgress: (pathId: string, slug: string, totalItems: number) => void;
   calculateProgress: (pathId: string, slug: string) => { progress: number; completed: number };
+  loadProgressFromServer: (pathId: string, slug: string) => Promise<void>
 }
 
 const PathProgressContext = createContext<PathProgressContextType | undefined>(undefined);
@@ -36,6 +38,36 @@ export function PathProgressProvider({ children }: { children: ReactNode }) {
   }, [pathProgresses]);
 
   const getProgressKey = (pathId: string, slug: string) => `${pathId}-${slug}`;
+
+  const loadProgressFromServer = async (pathId: string, slug: string) => {
+        try {
+            const result = await iqaiCurriculumService.getProgress(pathId, slug)
+            if (result.success && result.progress) {
+                const key = getProgressKey(pathId, slug)
+                const serverProgress = {
+                    pathId,
+                    slug,
+                    items: result.progress.items || {},
+                    lastAccessed:
+                        result.progress.lastAccessed ||
+                        new Date().toISOString(),
+                    totalProgress: result.progress.totalProgress || 0,
+                    completedItems: result.progress.completedItems || 0,
+                    totalItems: result.progress.totalItems || 0,
+                }
+
+                setPathProgresses((prev) => ({
+                    ...prev,
+                    [key]: serverProgress,
+                }))
+
+                // console.log('Progress loaded from server successfully')
+            }
+        } catch (error) {
+            console.error('Failed to load progress from server:', error)
+            // Continue with localStorage as fallback
+        }
+    }
 
   const getPathProgress = (pathId: string, slug: string): PathProgress | null => {
     const key = getProgressKey(pathId, slug);
@@ -82,8 +114,11 @@ export function PathProgressProvider({ children }: { children: ReactNode }) {
         }
       };
 
+      // Calculate completed items (excluding skipped items)
       const completedItems = Object.values(updatedItems).filter(item => item.status === 'done').length;
       const totalItems = Math.max(currentProgress.totalItems, Object.keys(updatedItems).length);
+      
+      // Calculate progress percentage (skipped items don't count towards progress)
       const totalProgress = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
 
       return {
@@ -115,7 +150,9 @@ export function PathProgressProvider({ children }: { children: ReactNode }) {
       getPathProgress,
       updateItemStatus,
       initializePathProgress,
-      calculateProgress
+      calculateProgress,
+      loadProgressFromServer,
+      
     }}>
       {children}
     </PathProgressContext.Provider>
