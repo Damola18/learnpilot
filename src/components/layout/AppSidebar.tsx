@@ -61,7 +61,7 @@ export function AppSidebar() {
       <SidebarHeader className="p-4 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-            <GraduationCap className="w-8 h-8 dark:text-white text-sidebar-foreground/60" />
+            <GraduationCap className="w-6 h-6 dark:text-white text-white" />
           </div>
           {!collapsed && (
             <div>
