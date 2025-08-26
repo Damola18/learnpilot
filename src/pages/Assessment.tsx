@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { CheckCircle, Clock, Brain, Target, ArrowRight, RotateCcw, Code, Smartphone, Server, Palette, BarChart3, Shield } from "lucide-react";
+import { CheckCircle, Brain, Target, ArrowRight, RotateCcw, Code, Smartphone, Server, Palette, BarChart3, Shield, HelpCircle } from "lucide-react";
 import { questionSets, type Category, type Difficulty, type Question } from "./data";
 
 type AssessmentStep = 'category' | 'difficulty' | 'questions' | 'results';
@@ -35,7 +35,7 @@ const Assessment = () => {
     { id: 'advanced', name: 'Advanced', description: 'Complex scenarios and expert-level topics' },
   ];
 
-  // Load questions based on category and difficulty
+
   const loadQuestions = async (category: Category, difficulty: Difficulty) => {
     const categoryQuestions = questionSets[category];
     const difficultyQuestions = categoryQuestions?.[difficulty] || [];
@@ -93,7 +93,7 @@ const Assessment = () => {
     setQuestions([]);
   };
 
-  // Category Selection Step
+
   if (step === 'category') {
     return (
       <div className="p-8 space-y-8">
@@ -126,7 +126,7 @@ const Assessment = () => {
     );
   }
 
-  // Difficulty Selection Step
+
   if (step === 'difficulty') {
     const selectedCat = categories.find(cat => cat.id === selectedCategory);
     return (
@@ -162,8 +162,10 @@ const Assessment = () => {
     );
   }
 
-  // Questions Step
   if (step === 'questions') {
+    const selectedCat = categories.find(cat => cat.id === selectedCategory);
+    const CategoryIcon = selectedCat?.icon || Code;
+    
     return (
       <div className="p-8 space-y-8">
         <div className="text-center">
@@ -174,7 +176,6 @@ const Assessment = () => {
           </p>
         </div>
 
-        {/* Results Dialog */}
         <Dialog open={showResults} onOpenChange={setShowResults}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
@@ -227,7 +228,6 @@ const Assessment = () => {
           </DialogContent>
         </Dialog>
 
-      {/* Progress */}
       <Card className="max-w-4xl mx-auto">
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -286,18 +286,17 @@ const Assessment = () => {
         </CardContent>
       </Card>
 
-      {/* Assessment Info */}
       <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-primary" />
-              <CardTitle className="text-sm">Duration</CardTitle>
+              <CategoryIcon className="h-4 w-4 text-primary" />
+              <CardTitle className="text-sm">Category</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">~5 min</p>
-            <p className="text-xs text-muted-foreground">Quick assessment</p>
+            <p className="text-lg font-bold">{selectedCat?.name}</p>
+            <p className="text-xs text-muted-foreground">{selectedCat?.description}</p>
           </CardContent>
         </Card>
 
@@ -305,25 +304,27 @@ const Assessment = () => {
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
               <Target className="h-4 w-4 text-primary" />
-              <CardTitle className="text-sm">Questions</CardTitle>
+              <CardTitle className="text-sm">Difficulty</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{questions.length}</p>
-            <p className="text-xs text-muted-foreground">Skill evaluation</p>
+            <p className="text-lg font-bold capitalize">{selectedDifficulty}</p>
+            <p className="text-xs text-muted-foreground">
+              {difficulties.find(d => d.id === selectedDifficulty)?.description}
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
-              <Brain className="h-4 w-4 text-primary" />
-              <CardTitle className="text-sm">Skills</CardTitle>
+              <HelpCircle className="h-4 w-4 text-primary" />
+              <CardTitle className="text-sm">Question</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{questions.length}</p>
-            <p className="text-xs text-muted-foreground">Questions available</p>
+            <p className="text-lg font-bold">{currentQuestion + 1} of {questions.length}</p>
+            <p className="text-xs text-muted-foreground">Current progress</p>
           </CardContent>
         </Card>
         </div>
@@ -337,7 +338,6 @@ const Assessment = () => {
     );
   }
 
-  // Default return (should not reach here)
   return null;
 };
 
