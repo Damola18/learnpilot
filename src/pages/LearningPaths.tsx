@@ -52,6 +52,7 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Link } from 'react-router-dom'
+import { usePathProgress } from '@/contexts/PathProgressContext'
 import { useToast } from '@/hooks/use-toast'
 import { iqaiCurriculumService } from '@/services/iqaiCurriculumService'
 import { useLearningPaths } from '@/contexts/LearningPathsContext'
@@ -118,6 +119,8 @@ export default function LearningPaths() {
     const [error, setError] = useState(null)
     const [isRefreshing, setIsRefreshing] = useState(false)
     const { toast } = useToast()
+    const { getPathProgress, calculateProgress, loadProgressFromServer } =
+        usePathProgress()
 
     // Load saved learning paths on component mount
     useEffect(() => {
@@ -132,29 +135,194 @@ export default function LearningPaths() {
                 await iqaiCurriculumService.getStoredLearningPaths()
 
             if (response && response.paths) {
-                const formattedPaths = response.paths.map((path) => ({
-                    id: path.id,
-                    title: path.title,
-                    description: path.description,
-                    category: path.domain || 'General',
-                    difficulty: path.difficulty || 'Intermediate',
-                    duration: calculateDuration(path.curriculum),
-                    lessons: path.curriculum?.modules?.length || 0,
-                    tags: path.curriculum?.tags || [],
-                    status: path.status || 'not_started',
-                    progress: 0,
-                    rating: 4.5, // Default rating
-                    author: 'AI Generated',
-                    thumbnail: '/placeholder.svg',
-                    learningOutcomes: path.curriculum?.objectives || [],
-                    startedDate: path.created_at
-                        ? new Date(path.created_at)
-                        : null,
-                    lastAccessed: path.updated_at
-                        ? new Date(path.updated_at)
-                        : null,
-                    curriculum: path.curriculum,
-                }))
+                // Load progress from server for each path
+                const pathsWithServerProgress = await Promise.all(
+                    response.paths.map(async (path) => {
+                        const pathSlug = path.title
+                            .toLowerCase()
+                            .replace(/[^a-z0-9]+/g, '-')
+                            .replace(/(^-|-$)/g, '')
+
+                        // Load progress from server first
+                        await loadProgressFromServer(path.id, pathSlug)
+                        return path
+                    }),
+                )
+
+                const formattedPaths = pathsWithServerProgress.map((path) => {
+                    // Generate slug for progress lookup
+                    const pathSlug = path.title
+                        .toLowerCase()
+                        .replace(/[^a-z0-9]+/g, '-')
+                        .replace(/(^-|-$)/g, '')
+
+                    // Get actual progress from PathProgressContext
+                    const { progress, completed } = calculateProgress(
+                        path.id,
+                        pathSlug,
+                    )
+
+                    // Debug localStorage and progress data
+                    // console.log('=== PATH PROGRESS DEBUG ===', {
+                    //     pathTitle: path.title,
+                    //     pathId: path.id,
+                    //     pathSlug,
+                    //     progress,
+                    //     completed,
+                    //     localStorageKey: `${path.id}-${pathSlug}`,
+                    // })
+
+                    // Check what's in localStorage
+                    const savedProgresses =
+                        localStorage.getItem('pathProgresses')
+                    if (savedProgresses) {
+                        const parsed = JSON.parse(savedProgresses)
+                        // console.log('All saved progresses:', parsed)
+                        const thisPathProgress =
+                            parsed[`${path.id}-${pathSlug}`]
+                        // console.log('This path progress:', thisPathProgress)
+                    }
+
+                    // Calculate completed modules (not just completed items)
+                    let completedModuleCount = 0
+                    if (path.curriculum?.modules) {
+                        const pathProgress = getPathProgress(path.id, pathSlug)
+                        // console.log(
+                        //     'Module completion debug for:',
+                        //     path.title,
+                        //     {
+                        //         pathId: path.id,
+                        //         pathSlug,
+                        //         hasPathProgress: !!pathProgress,
+                        //         progressItems: pathProgress
+                        //             ? Object.keys(pathProgress.items)
+                        //             : [],
+                        //         modulesCount: path.curriculum.modules.length,
+                        //     },
+                        // )
+
+                        if (pathProgress) {
+                            
+                            completedModuleCount =
+                                path.curriculum.modules.filter(
+                                    (module, index) => {
+                                        // Create the same sectionId as used in PathDetail
+                                        const sectionId =
+                                            module.id || `section-${index}`
+
+                                        // Get all items for this module using the same pattern as PathDetail
+                                        const moduleItems = [
+                                            ...(module.competencies || []).map(
+                                                (_, compIndex) =>
+                                                    `${sectionId}-competency-${compIndex}`,
+                                            ),
+                                            ...(module.resources || []).map(
+                                                (_, resIndex) =>
+                                                    `${sectionId}-resource-${resIndex}`,
+                                            ),
+                                            ...(module.assessments || []).map(
+                                                (_, assIndex) =>
+                                                    `${sectionId}-assessment-${assIndex}`,
+                                            ),
+                                        ]
+
+                                        // console.log(
+                                        //     `Module ${index} (${module.title}) debug:`,
+                                        //     {
+                                        //         sectionId,
+                                        //         moduleItems,
+                                        //         hasCompetencies: (
+                                        //             module.competencies || []
+                                        //         ).length,
+                                        //         hasResources: (
+                                        //             module.resources || []
+                                        //         ).length,
+                                        //         hasAssessments: (
+                                        //             module.assessments || []
+                                        //         ).length,
+                                        //         itemStatuses: moduleItems.map(
+                                        //             (itemId) => ({
+                                        //                 itemId,
+                                        //                 status: pathProgress
+                                        //                     .items[itemId]
+                                        //                     ?.status,
+                                        //             }),
+                                        //         ),
+                                        //     },
+                                        // )
+
+                                        // Module is completed if it has items and all are done
+                                        if (moduleItems.length === 0) {
+                                            console.log(
+                                                `Module ${index} has no items, marking as incomplete`,
+                                            )
+                                            return false
+                                        }
+
+                                        const allDone = moduleItems.every(
+                                            (itemId) => {
+                                                const itemProgress =
+                                                    pathProgress.items[itemId]
+                                                return (
+                                                    itemProgress?.status ===
+                                                    'done'
+                                                )
+                                            },
+                                        )
+
+                                        console.log(
+                                            `Module ${index} completion:`,
+                                            allDone,
+                                        )
+                                        return allDone
+                                    },
+                                ).length
+
+                            console.log('*********************',completedModuleCount,'************')
+                        }
+
+                        console.log(
+                            'Final completed module count:',
+                            completedModuleCount,
+                        )
+                    }
+
+                    // Determine status based on progress
+                    let status = path.status || 'not_started'
+                    if (progress === 100) {
+                        status = 'completed'
+                    } else if (progress > 0) {
+                        status = 'active'
+                    }
+
+                    return {
+                        id: path.id,
+                        title: path.title,
+                        description: path.description,
+                        category: path.domain || 'General',
+                        difficulty: path.difficulty || 'Intermediate',
+                        duration: calculateDuration(path.curriculum),
+                        lessons: path.curriculum?.modules?.length || 0,
+                        tags: path.curriculum?.tags || [],
+                        status: status,
+                        progress: progress,
+                        completedModules: completedModuleCount,
+                        totalModules: path.curriculum?.modules?.length || 0,
+                        rating: 4.5, // Default rating
+                        author: 'AI Generated',
+                        thumbnail: '/placeholder.svg',
+                        learningOutcomes: path.curriculum?.objectives || [],
+                        startedDate: path.created_at
+                            ? new Date(path.created_at)
+                            : null,
+                        lastAccessed:
+                            progress > 0
+                                ? getPathProgress(path.id, pathSlug)
+                                      ?.lastAccessed || path.updated_at
+                                : path.updated_at,
+                        curriculum: path.curriculum,
+                    }
+                })
                 setLearningPaths(formattedPaths)
             } else {
                 setLearningPaths([])
@@ -276,6 +444,7 @@ export default function LearningPaths() {
     }
 
     const filteredPaths = learningPaths.filter((path) => {
+
         const matchesSearch =
             path.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
             path.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -688,12 +857,18 @@ export default function LearningPaths() {
                                         />
                                         <div className='flex items-center justify-between text-xs text-muted-foreground'>
                                             <span>
-                                                0/{path.lessons} modules
+                                                {path.completedModules}/
+                                                {path.totalModules ||
+                                                    path.lessons}{' '}
+                                                modules
                                             </span>
                                             <span>
                                                 Last accessed:{' '}
                                                 {path.lastAccessed
-                                                    ? path.lastAccessed.toLocaleString()
+                                                    ? typeof path.lastAccessed ===
+                                                      'string'
+                                                        ? path.lastAccessed
+                                                        : path.lastAccessed.toLocaleString()
                                                     : 'Never'}
                                             </span>
                                         </div>

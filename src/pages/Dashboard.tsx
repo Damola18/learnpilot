@@ -97,7 +97,7 @@ export default function Dashboard() {
     getCompletedPaths,
   } = useLearningPaths() 
 
-  console.log("paths", paths)
+//   console.log("paths", paths)
 
   const greeting =
     currentTime.getHours() < 12
@@ -231,18 +231,7 @@ export default function Dashboard() {
                         <span>{path.category}</span>
                       </div>
                     </div>
-                    {/* <Button variant="outline" size="sm" className="ml-4">
-                      <PlayCircle className="w-4 h-4 mr-2" />
-                      Continue
-                    </Button> */}
                   </div>
-                  {/* <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Progress</span>
-                      <span className="font-medium">{path.progress}%</span>
-                    </div>
-                    <Progress value={path.progress} className="h-3" />
-                  </div> */}
                 </div>
               )) : (
                 <div className="p-4 rounded-lg border border-border bg-card text-center">

@@ -45,6 +45,20 @@ class DirectStorage {
                     curriculum TEXT, -- JSON string
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                );
+
+                CREATE TABLE IF NOT EXISTS learning_progress (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    path_id TEXT NOT NULL,
+                    slug TEXT NOT NULL,
+                    items TEXT, -- JSON string
+                    total_progress INTEGER DEFAULT 0,
+                    completed_items INTEGER DEFAULT 0,
+                    total_items INTEGER DEFAULT 0,
+                    last_accessed DATETIME,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(path_id, slug)
                 )
             `)
 
@@ -186,7 +200,6 @@ class DirectStorage {
             }
 
             const rows = await db.all(query, params)
-
             const paths = rows.map((row) => {
                 const curriculum = JSON.parse(row.curriculum)
                 const tags = JSON.parse(row.tags)
@@ -271,6 +284,98 @@ class DirectStorage {
             }
         } catch (error) {
             console.error('Direct storage update error:', error)
+            throw error
+        }
+    }
+
+    async saveProgress(pathId, slug, progressData) {
+        const db = await this.connect()
+
+        try {
+            const progressRecord = {
+                path_id: pathId,
+                slug: slug,
+                items: JSON.stringify(progressData.items || {}),
+                total_progress: progressData.totalProgress || 0,
+                completed_items: progressData.completedItems || 0,
+                total_items: progressData.totalItems || 0,
+                last_accessed:
+                    progressData.lastAccessed || new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+            }
+
+            await db.run(
+                `
+                INSERT OR REPLACE INTO learning_progress 
+                (path_id, slug, items, total_progress, completed_items, total_items, last_accessed, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                `,
+                [
+                    progressRecord.path_id,
+                    progressRecord.slug,
+                    progressRecord.items,
+                    progressRecord.total_progress,
+                    progressRecord.completed_items,
+                    progressRecord.total_items,
+                    progressRecord.last_accessed,
+                    progressRecord.updated_at,
+                ],
+            )
+
+            console.log(
+                `Direct storage: Progress saved for path '${pathId}' with slug '${slug}'`,
+            )
+            return {
+                success: true,
+                message: 'Progress saved successfully',
+            }
+        } catch (error) {
+            console.error('Direct storage progress save error:', error)
+            throw error
+        }
+    }
+
+    async getProgress(pathId, slug) {
+        const db = await this.connect()
+        // console.log('=====',pathId)
+    //    const p =  await db.get(
+    //         'SELECT path_id, slug FROM learning_progress'
+    //     )
+    //     console.log('+++++',p)
+        try {
+            const row = await db.get(
+                'SELECT * FROM learning_progress WHERE id = ?',
+                [pathId],
+            )
+
+            if (!row) {
+                return {
+                    success: false,
+                    message: `Progress not found for path '${pathId}' with slug '${slug}'`,
+                }
+            }
+
+            const progress = {
+                pathId: row.path_id,
+                slug: row.slug,
+                items: JSON.parse(row.items || '{}'),
+                totalProgress: row.total_progress,
+                completedItems: row.completed_items,
+                totalItems: row.total_items,
+                lastAccessed: row.last_accessed,
+                createdAt: row.created_at,
+                updatedAt: row.updated_at,
+            }
+
+            console.log(
+                `Direct storage: Progress retrieved for path '${pathId}' with slug '${slug}'`,
+            )
+            return {
+                success: true,
+                progress: progress,
+            }
+        } catch (error) {
+            console.error('Direct storage progress get error:', error)
             throw error
         }
     }

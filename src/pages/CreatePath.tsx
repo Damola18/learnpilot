@@ -199,7 +199,7 @@ export default function CreatePath() {
                 )
 
                 if (saveResult.success) {
-                    console.log('Learning path saved successfully!')
+                    // console.log('Learning path saved successfully!')
                     // Navigate to paths page
                     setTimeout(() => {
                         navigate('/dashboard/paths')

@@ -1,7 +1,7 @@
 // CURRICULUM DESIGNER (dynamic import of ADK to avoid client-side bundling)
 export async function createCurriculumDesigner() {
     // dynamically import the ADK in Node runtime only
-    console.log('createCurriculumDesigner: dynamic importing @iqai/adk')
+    // console.log('createCurriculumDesigner: dynamic importing @iqai/adk')
     const { AgentBuilder, createTool } = await import('@iqai/adk')
 
     // Define tools using createTool after the dynamic import
@@ -80,9 +80,9 @@ export async function createCurriculumDesigner() {
     })
 
     // Build the agent and return the runtime objects
-    console.log(
-        'createCurriculumDesigner: building agent (curriculum_designer)',
-    )
+    // console.log(
+    //     'createCurriculumDesigner: building agent (curriculum_designer)',
+    // )
     let agent
     try {
         // Try the standard AgentBuilder pattern first
@@ -119,10 +119,10 @@ export async function createCurriculumDesigner() {
             )
             .build()
     } catch (builderError) {
-        console.log(
-            'createCurriculumDesigner: AgentBuilder.create failed, trying new AgentBuilder():',
-            builderError.message,
-        )
+        // console.log(
+        //     'createCurriculumDesigner: AgentBuilder.create failed, trying new AgentBuilder():',
+        //     builderError.message,
+        // )
         // Fallback: try direct constructor if create() doesn't exist
         agent = new (AgentBuilder as any)({ name: 'curriculum_designer' })
             .withModel('gemini-2.5-flash')

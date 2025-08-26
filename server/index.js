@@ -338,6 +338,87 @@ app.patch('/learning-path/:id', async (req, res) => {
     }
 })
 
+// Save learning progress
+app.post('/save-progress', async (req, res) => {
+    try {
+        const {
+            pathId,
+            slug,
+            items,
+            totalProgress,
+            completedItems,
+            totalItems,
+            lastAccessed,
+        } = req.body
+
+        if (!pathId || !slug) {
+            return res
+                .status(400)
+                .json({ error: 'pathId and slug are required' })
+        }
+
+        console.log('Server: saving progress for path:', pathId, slug)
+
+        const progressData = {
+            pathId,
+            slug,
+            items: items || {},
+            totalProgress: totalProgress || 0,
+            completedItems: completedItems || 0,
+            totalItems: totalItems || 0,
+            lastAccessed: lastAccessed || new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+        }
+
+        const result = await directStorage.saveProgress(
+            pathId,
+            slug,
+            progressData,
+        )
+
+        if (!result.success) {
+            return res.status(500).json(result)
+        }
+
+        console.log('Server: progress saved successfully')
+
+        res.setHeader('Content-Type', 'application/json')
+        return res.status(200).json(result)
+    } catch (err) {
+        console.error('save-progress error:', err)
+        return res.status(500).json({ error: err?.message || String(err) })
+    }
+})
+
+// Get learning progress
+app.get('/get-progress', async (req, res) => {
+    try {
+        const { pathId, slug } = req.query
+
+        if (!pathId || !slug) {
+            return res
+                .status(400)
+                .json({ error: 'pathId and slug are required' })
+        }
+
+        console.log('Server: retrieving progress for path:', pathId, slug)
+
+        const result = await directStorage.getProgress(pathId, slug)
+
+        if (!result.success) {
+            return res.status(404).json(result)
+        }
+
+        console.log('Server: progress retrieved successfully')
+
+        res.setHeader('Content-Type', 'application/json')
+        return res.status(200).json(result)
+    } catch (err) {
+        console.error('get-progress error:', err)
+        return res.status(500).json({ error: err?.message || String(err) })
+    }
+})
+
 const port = process.env.PORT || 3001
 app.listen(port, () => {
     console.log(`IQAI local server listening on http://localhost:${port}`)
