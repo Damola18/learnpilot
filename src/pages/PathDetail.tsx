@@ -16,7 +16,10 @@ import {
   NotebookPen,
   NotebookText,
   XCircle,
-  PlayCircle
+  PlayCircle,
+  Video,
+  FileText,
+  ExternalLink
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,6 +48,8 @@ interface PathItem {
     status: 'pending' | 'done' | 'in-progress' | 'skip'
     type: 'lesson' | 'quiz' | 'role-play' | 'resource' | 'assessment'
     description?: string
+    resourceType?: 'article' | 'video'
+    url?: string  
 }
 
 interface PathSection {
@@ -183,7 +188,7 @@ export default function PathDetail() {
         }
 
         loadPathData()
-    }, [pathSlug, getPathProgress, initializePathProgress, updatePath])
+    }, [pathSlug])
 
     // Function to convert server path data to PathDetail format
     const convertServerPathToPathData = (
@@ -233,7 +238,9 @@ export default function PathDetail() {
                             duration: resource.estimatedTime || '10 min',
                             status: 'pending' as const,
                             type: 'resource' as const,
-                            description: `Resource: ${resource.title}`,
+                            description: resource.description || `Resource: ${resource.title}`,
+                            resourceType: resource.type || 'article',
+                            url: resource.url
                         }),
                     ),
                     ...(module.assessments || []).map(
@@ -411,23 +418,26 @@ export default function PathDetail() {
     }
   }
 
-  const getTypeIcon = (type: string) => {
+  const getTypeIcon = (type: string, resourceType?: string) => {
     switch (type) {
-      case "role-play":
-        return <Users className="w-4 h-4 text-primary" />;
-      case "quiz":
-        return <NotebookText className="w-4 h-4 text-orange-300" />;
-      case "assessment":
-        return <NotebookPen className="w-4 h-4 text-red-300" />;
-      case "resource":
-        return <Brain className="w-4 h-4 text-yellow-300" />;
-      default:
-        return <BookOpen className="w-4 h-4 text-green-300" />;
+        case "role-play":
+            return <Users className="w-4 h-4 text-primary" />;
+        case "quiz":
+            return <NotebookText className="w-4 h-4 text-orange-300" />;
+        case "assessment":
+            return <NotebookPen className="w-4 h-4 text-red-300" />;
+        case "resource":
+            if (resourceType === 'video') {
+                return <Video className="w-4 h-4 text-yellow-300" />;
+            }
+            return <FileText className="w-4 h-4 text-yellow-300" />;
+        default:
+            return <BookOpen className="w-4 h-4 text-green-300" />;
     }
   };
 
 
-    const getTypeLabel = (type: string) => {
+      const getTypeLabel = (type: string, resourceType?: string) => {
         switch (type) {
             case 'role-play':
                 return 'Role Play'
@@ -436,11 +446,11 @@ export default function PathDetail() {
             case 'assessment':
                 return 'Assessment'
             case 'resource':
-                return 'Resource'
+                return resourceType === 'video' ? 'Video' : 'Article'
             default:
                 return 'Lesson'
         }
-    }
+      }
 
     if (loading) {
         return (
@@ -478,7 +488,6 @@ export default function PathDetail() {
 
     return (
         <div className='p-6 space-y-6 mx-auto'>
-            {/* Header */}
             <div className='flex items-center gap-4'>
                 <Button variant='ghost' size='sm' asChild>
                     <Link to='/dashboard/paths'>
@@ -487,14 +496,12 @@ export default function PathDetail() {
                     </Link>
                 </Button>
             </div>
-
-      {/* Path Info */}
       <Card>
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <CardTitle className="text-2xl mb-2">{pathData.description}</CardTitle>
-              <p className="text-muted-foreground mb-4">Goal: {pathData.title}</p>
+              <CardTitle className="text-2xl mb-2">{pathData.title}</CardTitle>
+              <p className="text-muted-foreground mb-4">{pathData.description}</p>
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 {pathData.difficulty && (
                   <div className="flex items-center gap-1">
@@ -563,27 +570,46 @@ export default function PathDetail() {
               <CardContent className="pt-0">
                 <div className="space-y-3">
                   {section.items.map((item) => (
-                    <div key={item.id} className={`flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors, ${item.status === "done" && "bg-green-500/10 hover:bg-green-500/10"}`}>
+                    <div key={item.id} className={`flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors ${item.status === "done" && "bg-green-500/10 hover:bg-green-500/10"}`}>
                       <div className="flex-shrink-0">
                         {getStatusIcon(item.status)}
                       </div>
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          {getTypeIcon(item.type)}
-                          <h4 className="font-medium text-sm">{item.title}</h4>
-                          {getTypeLabel(item.type) && (
-                            <Badge variant="outline" className="text-xs">
-                              {getTypeLabel(item.type)}
-                            </Badge>
-                          )}
+                            {getTypeIcon(item.type, item.resourceType)}
+                            <h4 className="font-medium text-sm">{item.title}</h4>
+                            {getTypeLabel(item.type, item.resourceType) && (
+                                <Badge variant="outline" className="text-xs">
+                                    {getTypeLabel(item.type, item.resourceType)}
+                                </Badge>
+                            )}
                         </div>
                         {item.description && (
-                          <p className="text-xs text-muted-foreground mb-2">{item.description}</p>
+                            <p className="text-xs text-muted-foreground mb-2">{item.description}</p>
+                        )}
+                        {item.type === 'resource' && item.url && (
+                            <div className="mb-2 flex items-start">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 rounded-lg border border-border hover:bg-accent"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        window.open(item.url, '_blank');
+                                    }}
+                                >
+                                    <span className="flex items-center  gap-2">
+                                        
+                                        See {item.resourceType === 'video' ? 'video' : 'article'}
+                                        <ExternalLink className="w-3 h-3" />
+                                    </span>
+                                </Button>
+                            </div>
                         )}
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Clock className="w-3 h-3" />
-                          <span>{item.duration !== "NaN min" ? item.duration : "5 min"}</span>
+                            <Clock className="w-3 h-3" />
+                            <span>{item.duration !== "NaN min" ? item.duration : "5 min"}</span>
                         </div>
                       </div>
 
@@ -614,3 +640,4 @@ export default function PathDetail() {
     </div>
   );
 }
+
