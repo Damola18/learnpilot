@@ -186,7 +186,7 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## � Contributors
+## Contributors
 
 Special thanks to our amazing contributors:
 
@@ -194,7 +194,7 @@ Special thanks to our amazing contributors:
 -   [@AshakaE](https://github.com/AshakaE) - Full-Stack Developer
 -   [@DaWei8](https://github.com/DaWei8) - Frontend Developer
 
-## �🙏 Acknowledgments
+## 🙏 Acknowledgments
 
 -   [Google Generative AI](https://ai.google.dev/) for AI capabilities
 -   [IQAI](https://adk.iqai.com/) for the Agent Development Kit
@@ -207,4 +207,3 @@ If you encounter any issues or have questions:
 
 -   🐛 [Report a Bug](https://github.com/Damola18/learnpilot/issues)
 -   💡 [Request a Feature](https://github.com/Damola18/learnpilot/issues)
--   📧 Contact: [your-email@example.com]
