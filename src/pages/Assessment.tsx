@@ -5,51 +5,55 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { CheckCircle, Clock, Brain, Target, ArrowRight, RotateCcw } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { CheckCircle, Clock, Brain, Target, ArrowRight, RotateCcw, Code, Smartphone, Server, Palette, BarChart3, Shield } from "lucide-react";
+import { questionSets, type Category, type Difficulty, type Question } from "./data";
+
+type AssessmentStep = 'category' | 'difficulty' | 'questions' | 'results';
 
 const Assessment = () => {
+  const [step, setStep] = useState<AssessmentStep>('category');
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<string[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [questions, setQuestions] = useState<Question[]>([]);
 
-  const questions = [
-    {
-      id: 1,
-      question: "What is the main purpose of React hooks?",
-      options: [
-        "To replace class components entirely",
-        "To manage state and side effects in functional components", 
-        "To improve performance only",
-        "To add styling to components"
-      ],
-      correct: 1,
-      skill: "React Fundamentals"
-    },
-    {
-      id: 2,
-      question: "Which of the following is NOT a valid JavaScript data type?",
-      options: [
-        "undefined",
-        "boolean", 
-        "integer",
-        "symbol"
-      ],
-      correct: 2,
-      skill: "JavaScript Basics"
-    },
-    {
-      id: 3,
-      question: "What does the 'const' keyword do in JavaScript?",
-      options: [
-        "Creates a variable that cannot be reassigned",
-        "Creates a constant function",
-        "Makes variables faster",
-        "Creates global variables"
-      ],
-      correct: 0,
-      skill: "JavaScript Basics"
-    }
+  const categories = [
+    { id: 'frontend', name: 'Frontend Development', icon: Code, description: 'HTML, CSS, JavaScript, React, Vue' },
+    { id: 'backend', name: 'Backend Development', icon: Server, description: 'Node.js, Python, APIs, Databases' },
+    { id: 'mobile', name: 'Mobile Development', icon: Smartphone, description: 'React Native, Flutter, iOS, Android' },
+    { id: 'ux-design', name: 'UX/UI Design', icon: Palette, description: 'User Experience, Interface Design' },
+    { id: 'data-science', name: 'Data Science', icon: BarChart3, description: 'Analytics, Machine Learning, Statistics' },
+    { id: 'cybersecurity', name: 'Cybersecurity', icon: Shield, description: 'Security, Encryption, Threat Analysis' },
   ];
+
+  const difficulties = [
+    { id: 'beginner', name: 'Beginner', description: 'Basic concepts and fundamentals' },
+    { id: 'intermediate', name: 'Intermediate', description: 'Applied knowledge and best practices' },
+    { id: 'advanced', name: 'Advanced', description: 'Complex scenarios and expert-level topics' },
+  ];
+
+  // Load questions based on category and difficulty
+  const loadQuestions = async (category: Category, difficulty: Difficulty) => {
+    const categoryQuestions = questionSets[category];
+    const difficultyQuestions = categoryQuestions?.[difficulty] || [];
+    setQuestions(difficultyQuestions);
+  };
+
+  const handleCategorySelect = (category: Category) => {
+    setSelectedCategory(category);
+    setStep('difficulty');
+  };
+
+  const handleDifficultySelect = async (difficulty: Difficulty) => {
+    setSelectedDifficulty(difficulty);
+    if (selectedCategory) {
+      await loadQuestions(selectedCategory, difficulty);
+      setStep('questions');
+    }
+  };
 
   const handleAnswer = (value: string) => {
     const newAnswers = [...answers];
@@ -80,78 +84,153 @@ const Assessment = () => {
   };
 
   const resetAssessment = () => {
+    setStep('category');
+    setSelectedCategory(null);
+    setSelectedDifficulty(null);
     setCurrentQuestion(0);
     setAnswers([]);
     setShowResults(false);
+    setQuestions([]);
   };
 
-  if (showResults) {
-    const results = calculateResults();
+  // Category Selection Step
+  if (step === 'category') {
     return (
       <div className="p-8 space-y-8">
         <div className="text-center">
-          <h1 className="text-3xl font-satoshi font-bold text-foreground">Assessment Results</h1>
-          <p className="text-muted-foreground mt-2">Your knowledge evaluation is complete</p>
+          <h1 className="text-3xl font-satoshi font-bold text-foreground">Skill Assessment</h1>
+          <p className="text-muted-foreground mt-2">Choose a category to evaluate your knowledge</p>
         </div>
 
-        <Card className="max-w-2xl mx-auto">
-          <CardHeader className="text-center">
-            <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-              <CheckCircle className="h-8 w-8 text-primary" />
-            </div>
-            <CardTitle className="text-2xl">Assessment Complete!</CardTitle>
-            <CardDescription>Here's how you performed</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="text-center">
-              <div className="text-4xl font-bold text-primary mb-2">{results.score}%</div>
-              <p className="text-muted-foreground">
-                {results.correct} out of {results.total} questions correct
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="font-semibold">Skill Breakdown:</h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">JavaScript Basics</span>
-                  <Badge variant="secondary">2/2 Correct</Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">React Fundamentals</span>
-                  <Badge variant={results.correct >= 1 ? "secondary" : "destructive"}>
-                    1/1 Correct
-                  </Badge>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <Button onClick={resetAssessment} variant="outline" className="flex-1">
-                <RotateCcw className="h-4 w-4 mr-2" />
-                Retake Assessment
-              </Button>
-              <Button className="flex-1">
-                View Recommended Paths
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          {categories.map((category) => {
+            const IconComponent = category.icon;
+            return (
+              <Card 
+                key={category.id} 
+                className="cursor-pointer hover:shadow-sm transition-shadow border-2 hover:border-primary/50"
+                onClick={() => handleCategorySelect(category.id as Category)}
+              >
+                <CardHeader className="text-center">
+                  <div className="mx-auto w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                    <IconComponent className="h-6 w-6 text-primary" />
+                  </div>
+                  <CardTitle className="text-lg">{category.name}</CardTitle>
+                  <CardDescription>{category.description}</CardDescription>
+                </CardHeader>
+              </Card>
+            );
+          })}
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className="p-8 space-y-8">
-      <div className="text-center">
-        <h1 className="text-3xl font-satoshi font-bold text-foreground">Skill Assessment</h1>
-        <p className="text-muted-foreground mt-2">Evaluate your knowledge to get personalized recommendations</p>
+  // Difficulty Selection Step
+  if (step === 'difficulty') {
+    const selectedCat = categories.find(cat => cat.id === selectedCategory);
+    return (
+      <div className="p-8 space-y-8">
+        <div className="text-center">
+          <h1 className="text-3xl font-satoshi font-bold text-foreground">Choose Difficulty Level</h1>
+          <p className="text-muted-foreground mt-2">
+            Selected: <Badge variant="secondary">{selectedCat?.name}</Badge>
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+          {difficulties.map((difficulty) => (
+            <Card 
+              key={difficulty.id}
+              className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-primary/50"
+              onClick={() => handleDifficultySelect(difficulty.id as Difficulty)}
+            >
+              <CardHeader className="text-center">
+                <CardTitle className="text-xl">{difficulty.name}</CardTitle>
+                <CardDescription>{difficulty.description}</CardDescription>
+              </CardHeader>
+            </Card>
+          ))}
+        </div>
+
+        <div className="text-center">
+          <Button variant="outline" onClick={() => setStep('category')}>
+            Back to Categories
+          </Button>
+        </div>
       </div>
+    );
+  }
+
+  // Questions Step
+  if (step === 'questions') {
+    return (
+      <div className="p-8 space-y-8">
+        <div className="text-center">
+          <h1 className="text-3xl font-satoshi font-bold text-foreground">Assessment Questions</h1>
+          <p className="text-muted-foreground mt-2">
+            <Badge variant="secondary" className="mr-2">{categories.find(c => c.id === selectedCategory)?.name}</Badge>
+            <Badge variant="outline">{selectedDifficulty}</Badge>
+          </p>
+        </div>
+
+        {/* Results Dialog */}
+        <Dialog open={showResults} onOpenChange={setShowResults}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-center text-2xl">Assessment Complete!</DialogTitle>
+              <DialogDescription className="text-center">Here's how you performed</DialogDescription>
+            </DialogHeader>
+            
+            {showResults && (() => {
+              const results = calculateResults();
+              return (
+                <div className="space-y-6 pt-4">
+                  <div className="text-center">
+                    <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                      <CheckCircle className="h-8 w-8 text-primary" />
+                    </div>
+                    <div className="text-4xl font-bold text-primary mb-2">{results.score}%</div>
+                    <p className="text-muted-foreground">
+                      {results.correct} out of {results.total} questions correct
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h3 className="font-semibold">Category: {categories.find(c => c.id === selectedCategory)?.name}</h3>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Difficulty Level</span>
+                        <Badge variant="secondary">{selectedDifficulty}</Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Overall Score</span>
+                        <Badge variant={results.score >= 70 ? "secondary" : "destructive"}>
+                          {results.score >= 70 ? "Good" : "Needs Improvement"}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <Button onClick={resetAssessment} variant="outline" className="flex-1">
+                      <RotateCcw className="h-4 w-4 mr-2" />
+                      Take Another Assessment
+                    </Button>
+                    <Button className="flex-1" onClick={() => setShowResults(false)}>
+                      View Recommended Paths
+                    </Button>
+                  </div>
+                </div>
+              );
+            })()}
+          </DialogContent>
+        </Dialog>
 
       {/* Progress */}
       <Card className="max-w-4xl mx-auto">
         <CardHeader>
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Brain className="h-5 w-5 text-primary" />
               <CardTitle>Knowledge Assessment</CardTitle>
@@ -160,7 +239,7 @@ const Assessment = () => {
               {currentQuestion + 1} of {questions.length}
             </Badge>
           </div>
-          <Progress value={((currentQuestion + 1) / questions.length) * 100} className="h-2" />
+          <Progress value={((currentQuestion + 1) / questions.length) * 100} className="mt-4" />
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
@@ -243,13 +322,23 @@ const Assessment = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">3</p>
-            <p className="text-xs text-muted-foreground">Areas covered</p>
+            <p className="text-2xl font-bold">{questions.length}</p>
+            <p className="text-xs text-muted-foreground">Questions available</p>
           </CardContent>
         </Card>
+        </div>
+
+        <div className="text-center">
+          <Button variant="outline" onClick={() => setStep('difficulty')}>
+            Change Difficulty
+          </Button>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  // Default return (should not reach here)
+  return null;
 };
 
 export default Assessment;
