@@ -86,7 +86,7 @@
 
     ```env
     GOOGLE_AI_API_KEY=your_google_ai_key
-    IQAI_API_KEY=your_iqai_key
+
     # Add other required environment variables
     ```
 

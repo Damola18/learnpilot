@@ -2,26 +2,19 @@ import { useState } from "react";
 import {
   BookOpen,
   Clock,
-  Target,
-  TrendingUp,
   Zap,
   Plus,
-  PlayCircle,
-  Calendar,
-  Award,
   Brain,
   ArrowRight,
-  CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLearningPaths } from "@/contexts/LearningPathsContext";
 import { usePathProgress } from "@/contexts/PathProgressContext";
+import { formatSlug } from "@/utils/slugUtils";
 
 export default function Dashboard() {
   const [currentTime] = useState(new Date());
@@ -47,10 +40,7 @@ export default function Dashboard() {
     const completionDates = new Set<string>();
 
     paths.forEach(path => {
-      const pathSlug = path.title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '');
+      const pathSlug = formatSlug(path.title)
       
       const pathProgress = getPathProgress(path.id, pathSlug);
       
@@ -94,10 +84,7 @@ export default function Dashboard() {
   const learningStreak = calculateLearningStreak();
 
   const weeklyStudyTime = paths.reduce((total, path) => {
-    const pathSlug = path.title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '');
+    const pathSlug = formatSlug(path.title)
     
     const { progress } = calculateProgress(path.id, pathSlug);
     const timeStr = path.estimatedTime || "0 hours";
@@ -107,29 +94,13 @@ export default function Dashboard() {
   }, 0);
 
   const completedPaths = paths.filter(path => {
-    const pathSlug = path.title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '');
+    const pathSlug = formatSlug(path.title)
     
     const { progress } = calculateProgress(path.id, pathSlug);
     return progress === 100;
   }).length;
 
-  const skillsGained = paths.reduce((total, path) => {
-    const pathSlug = path.title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '');
-    
-    const pathProgress = getPathProgress(path.id, pathSlug);
-
-    if (!pathProgress) return total;
-
-    return total + Object.entries(pathProgress.items)
-      .filter(([key, item]) => key.includes('competency') && item.status === 'done')
-      .length;
-  }, 0);
+  
 
   return (
     <div className="p-6 space-y-8 mx-auto">

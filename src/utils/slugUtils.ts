@@ -1,11 +1,9 @@
 
-export const generateSlug = (title: string): string => {
+export const formatSlug = (title: string): string => {
   return title
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, '') 
-    .replace(/[\s_-]+/g, '-') 
-    .replace(/^-+|-+$/g, ''); 
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, '-')
+  .replace(/(^-|-$)/g, '');
 };
 
 export const slugToTitle = (slug: string): string => {

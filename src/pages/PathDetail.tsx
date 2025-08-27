@@ -6,13 +6,10 @@ import {
   Users,
   CheckCircle,
   Circle,
-  Pause,
-  X,
   ChevronDown,
   ChevronUp,
   BookOpen,
   Loader2,
-  Brain,
   NotebookPen,
   NotebookText,
   XCircle,
@@ -32,10 +29,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
-import { LearningPath, useLearningPaths } from '@/contexts/LearningPathsContext'
-import { slugToTitle } from '@/utils/slugUtils'
+import { useLearningPaths } from '@/contexts/LearningPathsContext'
+import { formatSlug } from '@/utils/slugUtils'
 import {
-    GeneratedLearningPath,
     iqaiCurriculumService,
 } from '@/services/iqaiCurriculumService'
 import { usePathProgress } from '@/contexts/PathProgressContext'
@@ -98,8 +94,7 @@ export default function PathDetail() {
             }
 
             try {
-                // First, load all paths from the server
-                console.log('Loading paths from server...')
+
                 const response =
                     await iqaiCurriculumService.getStoredLearningPaths()
 
@@ -108,21 +103,10 @@ export default function PathDetail() {
                     setLoading(false)
                     return
                 }
-
-                console.log('Loaded paths from server:', response.paths.length)
                 setServerPaths(response.paths)
 
-                // Find the matching path by slug
                 const matchingPath = response.paths.find((path: any) => {
-                    const generatedSlug = path.title
-                        .toLowerCase()
-                        .replace(/[^a-z0-9]+/g, '-')
-                        .replace(/(^-|-$)/g, '')
-                    console.log('Comparing slugs:', {
-                        pathSlug,
-                        generatedSlug,
-                        title: path.title,
-                    })
+                    const generatedSlug = formatSlug(path.title)
                     return generatedSlug === pathSlug
                 })
 
@@ -131,8 +115,6 @@ export default function PathDetail() {
                     setLoading(false)
                     return
                 }
-
-                console.log('Found matching path:', matchingPath)
 
                 const convertedData = convertServerPathToPathData(
                     matchingPath,
@@ -330,10 +312,7 @@ export default function PathDetail() {
         }
 
         const matchingPath = serverPaths.find((path: ServerPath) => {
-            const generatedSlug = path.title
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/(^-|-$)/g, '')
+            const generatedSlug = formatSlug(path.title)
             return generatedSlug === pathSlug
         })
 
@@ -561,7 +540,6 @@ export default function PathDetail() {
         </CardHeader>
       </Card>
 
-      {/* Sections */}
       <div className="space-y-4">
         {pathData.sections.map((section) => (
           <Card key={section.id}>

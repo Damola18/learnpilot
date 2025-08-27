@@ -8,8 +8,8 @@ export interface LearnerProfile {
     description: string
     domain: string
     experienceLevel: 'beginner' | 'intermediate' | 'advanced'
-    timeCommitment: number // hours per week
-    motivationLevel: number // 1-10 scale
+    timeCommitment: number 
+    motivationLevel: number 
 }
 
 export interface TimeConstraints {
@@ -72,7 +72,6 @@ class IQAICurriculumService {
         timeConstraints: TimeConstraints,
     ): Promise<GeneratedLearningPath> {
         try {
-            // Call server endpoint that runs the curriculum designer in Node
             const res = await fetch(
                 'http://localhost:3001/generate-learning-path',
                 {
@@ -119,7 +118,6 @@ class IQAICurriculumService {
         timeConstraints: TimeConstraints,
         goals?: LearningGoal[],
     ): Promise<GeneratedLearningPath> {
-        // Normalize response to string
         const raw =
             typeof response === 'string'
                 ? response
@@ -127,14 +125,12 @@ class IQAICurriculumService {
                   response?.text ||
                   JSON.stringify(response)
 
-        // Attempt to locate the first JSON object in the response
         const jsonMatch = raw.match(/\{[\s\S]*\}/)
 
         if (jsonMatch) {
             try {
                 const parsed = JSON.parse(jsonMatch[0])
 
-                // Validate basic shape and provide defaults where needed
                 const id = parsed.id || `path-${Date.now()}`
                 const title = parsed.title || learnerProfile.title
                 const description =
@@ -145,7 +141,6 @@ class IQAICurriculumService {
                 const difficulty =
                     parsed.difficulty || learnerProfile.experienceLevel
 
-                // If modules provided by agent, use them (normalize each module)
                 let modules: GeneratedModule[] = []
                 if (
                     Array.isArray(parsed.modules) &&
@@ -206,7 +201,7 @@ class IQAICurriculumService {
                             : this.generateAssessments(idx + 1),
                     }))
                 } else {
-                    // No modules returned -> fall back to goal-driven generation
+                    
                     modules = this.generateModulesFromProfile(
                         learnerProfile,
                         timeConstraints,
@@ -245,7 +240,6 @@ class IQAICurriculumService {
                     'iqaiCurriculumService: failed to parse agent JSON output, falling back to generated path',
                     err,
                 )
-                // fall through to fallback
             }
         } else {
             console.warn(
@@ -253,7 +247,6 @@ class IQAICurriculumService {
             )
         }
 
-        // Fallback: use goal-driven generation but treat it as authoritative for now
         const fallbackModules = this.generateModulesFromProfile(
             learnerProfile,
             timeConstraints,
@@ -508,7 +501,6 @@ class IQAICurriculumService {
 
     private getModuleCompetencies(
         domain: string,
-        moduleNumber: number,
     ): string[] {
         const baseCompetencies = [
             'Problem-solving skills',
@@ -606,7 +598,7 @@ class IQAICurriculumService {
         goals: LearningGoal[],
         timeConstraints: TimeConstraints,
     ): GeneratedLearningPath {
-        // Fallback mock implementation
+
         return {
             id: `mock-path-${Date.now()}`,
             title: `${learnerProfile.title} (Mock)`,
@@ -625,14 +617,12 @@ class IQAICurriculumService {
         }
     }
 
-    // Save a learning path to the database
     async saveLearningPath(
         learningPath: GeneratedLearningPath,
         learnerProfile?: LearnerProfile,
         userId?: string,
     ): Promise<{ success: boolean; pathId?: string; error?: string }> {
         try {
-            // console.log('Saving learning path to storage...')
 
             const response = await fetch(
                 'http://localhost:3001/save-learning-path',
@@ -657,7 +647,6 @@ class IQAICurriculumService {
             const data = await response.json()
 
             if (data.success) {
-                // console.log('Learning path saved successfully:', data.result)
                 return { success: true, pathId: learningPath.id }
             } else {
                 throw new Error(data.error || 'Failed to save learning path')

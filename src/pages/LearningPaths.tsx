@@ -3,21 +3,16 @@ import {
     BookOpen,
     Clock,
     Target,
-    Filter,
     Search,
     Plus,
     PlayCircle,
     MoreVertical,
     Star,
     TrendingUp,
-    Calendar,
-    Users,
     Download,
-    Edit,
     Eye,
     Book,
     Archive,
-    CheckCircle,
     RefreshCw,
     AlertCircle,
 } from 'lucide-react'
@@ -33,7 +28,6 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from '@/components/ui/dialog'
 import {
     DropdownMenu,
@@ -56,7 +50,7 @@ import { Link } from 'react-router-dom'
 import { usePathProgress } from '@/contexts/PathProgressContext'
 import { useToast } from '@/hooks/use-toast'
 import { iqaiCurriculumService } from '@/services/iqaiCurriculumService'
-import { useLearningPaths } from '@/contexts/LearningPathsContext'
+import { formatSlug } from '@/utils/slugUtils'
 
 interface LearningPath {
     id: number
@@ -136,13 +130,9 @@ export default function LearningPaths() {
                 await iqaiCurriculumService.getStoredLearningPaths()
 
             if (response && response.paths) {
-                // Load progress from server for each path
                 const pathsWithServerProgress = await Promise.all(
                     response.paths.map(async (path) => {
-                        const pathSlug = path.title
-                            .toLowerCase()
-                            .replace(/[^a-z0-9]+/g, '-')
-                            .replace(/(^-|-$)/g, '')
+                        const pathSlug = formatSlug(path.title)
 
                         // Load progress from server first
                         await loadProgressFromServer(path.id, pathSlug)
@@ -152,66 +142,32 @@ export default function LearningPaths() {
 
                 const formattedPaths = pathsWithServerProgress.map((path) => {
                     // Generate slug for progress lookup
-                    const pathSlug = path.title
-                        .toLowerCase()
-                        .replace(/[^a-z0-9]+/g, '-')
-                        .replace(/(^-|-$)/g, '')
+                    const pathSlug = formatSlug(path.title)
 
-                    // Get actual progress from PathProgressContext
-                    const { progress, completed } = calculateProgress(
+    
+                    const { progress } = calculateProgress(
                         path.id,
                         pathSlug,
                     )
 
-                    // Debug localStorage and progress data
-                    // console.log('=== PATH PROGRESS DEBUG ===', {
-                    //     pathTitle: path.title,
-                    //     pathId: path.id,
-                    //     pathSlug,
-                    //     progress,
-                    //     completed,
-                    //     localStorageKey: `${path.id}-${pathSlug}`,
-                    // })
-
-                    // Check what's in localStorage
                     const savedProgresses =
                         localStorage.getItem('pathProgresses')
                     if (savedProgresses) {
                         const parsed = JSON.parse(savedProgresses)
-                        // console.log('All saved progresses:', parsed)
-                        const thisPathProgress =
-                            parsed[`${path.id}-${pathSlug}`]
-                        // console.log('This path progress:', thisPathProgress)
+                    
                     }
-
-                    // Calculate completed modules (not just completed items)
                     let completedModuleCount = 0
                     if (path.curriculum?.modules) {
                         const pathProgress = getPathProgress(path.id, pathSlug)
-                        // console.log(
-                        //     'Module completion debug for:',
-                        //     path.title,
-                        //     {
-                        //         pathId: path.id,
-                        //         pathSlug,
-                        //         hasPathProgress: !!pathProgress,
-                        //         progressItems: pathProgress
-                        //             ? Object.keys(pathProgress.items)
-                        //             : [],
-                        //         modulesCount: path.curriculum.modules.length,
-                        //     },
-                        // )
-
+                       
                         if (pathProgress) {
                             
                             completedModuleCount =
                                 path.curriculum.modules.filter(
                                     (module, index) => {
-                                        // Create the same sectionId as used in PathDetail
+
                                         const sectionId =
                                             module.id || `section-${index}`
-
-                                        // Get all items for this module using the same pattern as PathDetail
                                         const moduleItems = [
                                             ...(module.competencies || []).map(
                                                 (_, compIndex) =>
@@ -227,32 +183,7 @@ export default function LearningPaths() {
                                             ),
                                         ]
 
-                                        // console.log(
-                                        //     `Module ${index} (${module.title}) debug:`,
-                                        //     {
-                                        //         sectionId,
-                                        //         moduleItems,
-                                        //         hasCompetencies: (
-                                        //             module.competencies || []
-                                        //         ).length,
-                                        //         hasResources: (
-                                        //             module.resources || []
-                                        //         ).length,
-                                        //         hasAssessments: (
-                                        //             module.assessments || []
-                                        //         ).length,
-                                        //         itemStatuses: moduleItems.map(
-                                        //             (itemId) => ({
-                                        //                 itemId,
-                                        //                 status: pathProgress
-                                        //                     .items[itemId]
-                                        //                     ?.status,
-                                        //             }),
-                                        //         ),
-                                        //     },
-                                        // )
 
-                                        // Module is completed if it has items and all are done
                                         if (moduleItems.length === 0) {
                                             console.log(
                                                 `Module ${index} has no items, marking as incomplete`,
@@ -278,17 +209,9 @@ export default function LearningPaths() {
                                         return allDone
                                     },
                                 ).length
-
-                            console.log('*********************',completedModuleCount,'************')
                         }
-
-                        console.log(
-                            'Final completed module count:',
-                            completedModuleCount,
-                        )
                     }
 
-                    // Determine status based on progress
                     let status = path.status || 'not_started'
                     if (progress === 100) {
                         status = 'completed'
@@ -348,7 +271,6 @@ export default function LearningPaths() {
         if (curriculum.totalDuration) {
             const totalDurationStr = curriculum.totalDuration.toString()
 
-            // Handle formats like "2 weeks (~20 hours)" or "72 hours"
             const hoursInParenMatch =
                 totalDurationStr.match(/\(~?(\d+)\s*hours?\)/i)
             if (hoursInParenMatch) {
@@ -356,29 +278,22 @@ export default function LearningPaths() {
                 return hours === 1 ? '1 hour' : `${hours} hours`
             }
 
-            // Handle direct hours format like "72 hours"
             const directHoursMatch = totalDurationStr.match(/^(\d+)\s*hours?$/i)
             if (directHoursMatch) {
                 return curriculum.totalDuration
             }
-
-            // Handle weeks format like "2 weeks"
             const weeksMatch = totalDurationStr.match(/(\d+)\s*weeks?/i)
             if (weeksMatch) {
                 const weeks = parseInt(weeksMatch[1])
-                const estimatedHours = weeks * 10 // Rough estimate: 10 hours per week
+                const estimatedHours = weeks * 10 
                 return `${estimatedHours} hours`
             }
-
-            // If we can't parse it, return as-is
             return curriculum.totalDuration
         }
 
-        // Calculate based on actual module durations if available
         let totalMinutes = 0
         curriculum.modules.forEach((module) => {
             if (module.duration) {
-                // Parse duration string like "10 hours" or "30 min"
                 const durationStr = module.duration.toString()
                 const hoursMatch = durationStr.match(/(\d+)\s*hours?/i)
                 const minutesMatch = durationStr.match(/(\d+)\s*min/i)
@@ -388,12 +303,11 @@ export default function LearningPaths() {
                 } else if (minutesMatch) {
                     totalMinutes += parseInt(minutesMatch[1])
                 } else {
-                    // Fallback: try to parse as number and assume minutes
                     const duration = parseInt(durationStr) || 30
                     totalMinutes += duration
                 }
             } else {
-                totalMinutes += 30 // Default 30 min per module
+                totalMinutes += 30 
             }
         })
 
@@ -410,8 +324,6 @@ export default function LearningPaths() {
             description: 'Learning paths have been updated.',
         })
     }
-
-    // Helper functions for statistics
     const getTotalPaths = () => learningPaths.length
     const getActivePaths = () =>
         learningPaths.filter((p) => p.status === 'active').length
@@ -526,10 +438,7 @@ export default function LearningPaths() {
     }
 
     const getActionButton = (path: LearningPath) => {
-        const pathSlug = path.title
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/(^-|-$)/g, '')
+        const pathSlug = formatSlug(path.title)
 
         switch (path.status) {
             case 'completed':
@@ -566,7 +475,6 @@ export default function LearningPaths() {
 
     return (
         <div className='p-6 space-y-8  mx-auto'>
-            {/* Header */}
             <div className='flex flex-col lg:flex-row lg:items-center justify-between gap-4'>
                 <div>
                     <h1 className='text-3xl font-bold text-foreground'>
@@ -601,7 +509,6 @@ export default function LearningPaths() {
                 
             </div>
 
-            {/* Quick Stats */}
             <div className='grid grid-cols-1 md:grid-cols-4 gap-6'>
                 <Card className='border shadow-card'>
                     <CardContent className='p-6'>
@@ -668,11 +575,9 @@ export default function LearningPaths() {
                 </Card>
             </div>
 
-            {/* Filters */}
             <Card className='border-0 shadow-card'>
                 <CardContent className='p-0 space-y-4'>
                     <div className='flex flex-col lg:flex-row gap-4'>
-                        {/* Search */}
                         <div className='relative flex-1'>
                             <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground' />
                             <Input
@@ -683,7 +588,6 @@ export default function LearningPaths() {
                             />
                         </div>
 
-                        {/* Filters */}
                         <div className='flex flex-wrap gap-3'>
                             <Select
                                 value={selectedCategory}
@@ -743,7 +647,6 @@ export default function LearningPaths() {
                 </CardContent>
             </Card>
 
-            {/* Learning Paths Grid */}
             {!isLoading && !error && (
                 <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
                     {filteredPaths.map((path) => (
@@ -868,7 +771,7 @@ export default function LearningPaths() {
                                     </div>
                                 )}
 
-                                {/* Path Info */}
+
                                 <div className='flex items-center justify-between pt-4 border-t border-border'>
                                     <div className='flex items-center gap-6 text-sm text-muted-foreground'>
                                         <div className='flex items-center gap-1'>
@@ -896,7 +799,6 @@ export default function LearningPaths() {
                 </div>
             )}
 
-            {/* Loading State */}
             {isLoading && (
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
                     {[...Array(6)].map((_, i) => (
@@ -918,7 +820,6 @@ export default function LearningPaths() {
                 </div>
             )}
 
-            {/* Error State */}
             {error && !isLoading && (
                 <Card className='border-0 shadow-card'>
                     <CardContent className='p-12 text-center'>
@@ -939,7 +840,6 @@ export default function LearningPaths() {
                 </Card>
             )}
 
-            {/* Empty State */}
             {!isLoading && !error && filteredPaths.length === 0 && (
                 <Card className='border-0 shadow-card'>
                     <CardContent className='p-12 text-center'>
@@ -961,7 +861,6 @@ export default function LearningPaths() {
                 </Card>
             )}
 
-            {/* View Modal */}
             <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
                 <DialogContent>
                     <DialogHeader>
@@ -1013,7 +912,6 @@ export default function LearningPaths() {
                 </DialogContent>
             </Dialog>
 
-            {/* Edit Modal */}
             <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
                 <DialogContent>
                     <DialogHeader>

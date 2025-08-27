@@ -698,7 +698,7 @@ export interface Question {
         },
         {
           id: 4,
-          question: "What is design systems in UX?",
+          question: "What is a design system in UX?",
           options: [
             "A collection of reusable components and guidelines",
             "Software for designers",

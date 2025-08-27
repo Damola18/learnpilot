@@ -13,13 +13,64 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLearningPaths } from "@/contexts/LearningPathsContext";
+import { usePathProgress } from "@/contexts/PathProgressContext";
 import { useNavigate } from "react-router-dom";
 import { generateAvatar } from "@/utils/generateAvatar";
+import { formatSlug } from "@/utils/slugUtils";
 
 export function AppHeader() {
   const [isDark, setIsDark] = useState(false);
   const { user, signOut } = useAuth();
+  const { paths } = useLearningPaths();
+  const { getPathProgress } = usePathProgress();
   const navigate = useNavigate();
+
+  const calculateLearningStreak = () => {
+    const today = new Date();
+    const completionDates = new Set<string>();
+
+    paths.forEach(path => {
+      const pathSlug = formatSlug(path.title)
+    
+      const pathProgress = getPathProgress(path.id, pathSlug);
+      
+      if (pathProgress) {
+        Object.values(pathProgress.items).forEach(item => {
+          if (item.status === 'done' && item.completedAt) {
+            const completionDate = new Date(item.completedAt);
+            const dateStr = completionDate.toISOString().split('T')[0];
+            completionDates.add(dateStr);
+          }
+        });
+      }
+    });
+
+    let streak = 0;
+    const currentDate = new Date(today);
+    
+    const todayStr = today.toISOString().split('T')[0];
+    const checkingToday = completionDates.has(todayStr);
+    
+    if (!checkingToday) {
+      currentDate.setDate(currentDate.getDate() - 1);
+    }
+
+    while (true) {
+      const dateStr = currentDate.toISOString().split('T')[0];
+      
+      if (completionDates.has(dateStr)) {
+        streak++;
+        currentDate.setDate(currentDate.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+
+    return streak;
+  };
+
+  const learningStreak = calculateLearningStreak();
 
   const getAvatarUrl = () => {
     const metadata = user?.user_metadata || {};
@@ -78,8 +129,8 @@ export function AppHeader() {
         <div className="flex items-center gap-3">
           <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-warning-muted border border-warning/20">
             <Zap className="w-4 h-4 text-primary animate-pulse" />
-            <span className="text-sm font-medium text-warning-foreground ">
-              1 Day streak
+            <span className="text-sm font-medium text-warning-foreground">
+              {learningStreak} {learningStreak === 1 ? 'Day' : 'Days'} streak
             </span>
           </div>
 
