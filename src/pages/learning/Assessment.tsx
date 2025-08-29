@@ -7,7 +7,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { CheckCircle, Brain, Target, ArrowRight, RotateCcw, Code, Smartphone, Server, Palette, BarChart3, Shield, HelpCircle } from "lucide-react";
-import { questionSets, type Category, type Difficulty, type Question } from "./data";
+import { questionSets, type Category, type Difficulty, type Question } from "../data";
 
 type AssessmentStep = 'category' | 'difficulty' | 'questions' | 'results';
 
